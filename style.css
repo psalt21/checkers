@@ -4,9 +4,7 @@ h1{
   font-family: sans-serif;
 }
 #checker-board{
-  width: 950px;
-  margin-left: auto;
-  margin-right: auto;
+
 }
 .square{
   width: 90px;
@@ -19,4 +17,9 @@ h1{
   width: 99%;
   height: 33.33%;
   float: left;
+}
+.checker-piece{
+  width: 85px;
+  height: 85px;
+  margin: 2px 0 0 2px;
 }
