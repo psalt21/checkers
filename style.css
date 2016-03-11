@@ -1,0 +1,22 @@
+h1{
+  text-align: center;
+  font-size: 3em;
+  font-family: sans-serif;
+}
+#checker-board{
+  width: 950px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.square{
+  width: 90px;
+  height: 90px;
+  background-color: white;
+  float: left;
+  border: 2px black solid;
+}
+.row{
+  width: 99%;
+  height: 33.33%;
+  float: left;
+}
