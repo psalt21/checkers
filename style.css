@@ -4,22 +4,34 @@ h1{
   font-family: sans-serif;
 }
 #checker-board{
-
+  border: 2px black solid;
+  width: 720px;
+  height: 720px;
 }
-.square{
+.white-cell{
   width: 90px;
   height: 90px;
   background-color: white;
   float: left;
-  border: 2px black solid;
 }
 .row{
-  width: 99%;
-  height: 33.33%;
-  float: left;
+
+
 }
 .checker-piece{
   width: 85px;
   height: 85px;
   margin: 2px 0 0 2px;
+}
+.black-cell{
+  width: 90px;
+  height: 90px;
+  background-color: black;
+  float: left;
+}
+.black-piece{
+  content:url(images/black.png);
+}
+.red-piece{
+  content:url(images/red.png);  
 }

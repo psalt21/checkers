@@ -1,66 +1,54 @@
-var boardSquares = [
-  ['', 'red', '', 'red', '', 'red', '', 'red'],
-  ['red', '', 'red', '', 'red', '', 'red', ''],
-  ['', 'red', '', 'red', '', 'red', '', 'red'],
-  ['', '', '', '', '', '', '', ''],
-  ['', '', '', '', '', '', '', ''],
-  ['black', '', 'black', '', 'black', '', 'black', ''],
-  ['', 'black', '', 'black', '', 'black', '', 'black'],
-  ['black', '', 'black', '', 'black', '', 'black', ''],
-];
+var boardArray = [];
 
 (function setup(){
   buildBoard();
-  setPieces();
+  // setPieces();
 })();
 
 function buildBoard(){
-  var colors = ['black', 'white', 'black', 'white', 'black', 'white', 'black', 'white', 'white', 'black', 'white', 'black', 'white', 'black', 'white', 'black',];
   var board = document.getElementById('checker-board');
-  var rowId = 0;
-  var squareId = 0;
-  var currentColor = 0;
-
-  for(var i = 0; i < 8; i++){
+  for(var rowId = 0; rowId < 8; rowId++){
     var row = document.createElement('div');
-    row.className = 'row';
-    row.id = 'row' + rowId;
-
-
-    for(var j = 0; j < 8; j++){
-      if(currentColor >= colors.length){
-        currentColor = 0;
+    row.setAttribute('id', 'row' + rowId);
+    row.setAttribute('class', 'row');
+    var rowArray =[];
+    for(var cellId = 0; cellId < 8; cellId++){
+      var cellObject = {
+        id: rowId + '' + cellId,
+        status: 'none',
+      };
+      var cell = document.createElement('div');
+      cell.setAttribute('id', rowId + '' + cellId);
+      if(isEven(rowId + cellId)){
+        cell.setAttribute('class', 'black-cell');
+        cellObject.color = 'black';
+      }else{
+        cell.setAttribute('class', 'white-cell');
+        cellObject.color = 'white';
+        cell.addEventListener('click', function (event){
+          console.log(event);
+          movePiece(event.target.id);
+        });
+        if(rowId < 3){
+          cell.setAttribute('class', 'white-cell red-piece');
+          cellObject.piece = 'red';
+          cellObject.status = 'piece';
+        }else if(rowId > 4){
+          cell.setAttribute('class', 'white-cell black-piece');
+          cellObject.piece = 'black';
+          cellObject.status = 'piece';
+        }else{
+          cell.setAttribute('class', 'white-cell');
+        }
       }
-      var square = document.createElement('div');
-      square.className = 'square';
-      square.id = rowId + '' + squareId;
-      square.style.backgroundColor = colors[currentColor];
-      squareId++;
-      row.appendChild(square);
-      currentColor++;
-      if(squareId > 7){
-        squareId = 0;
-      }
+      row.appendChild(cell);
+      rowArray.push(cellObject);
     }
-    rowId++;
     board.appendChild(row);
+    boardArray.push(rowArray);
   }
 }
 
-function setPieces(){
-  for(var i = 0; i < boardSquares.length; i++){
-    for(var j = 0; j < boardSquares[i].length; j++){
-      if(boardSquares[i][j] === 'red'){
-        var img = document.createElement('img');
-        img.src = 'images/red.png';
-        img.className = 'checker-piece';
-        document.getElementById(i + '' + j).appendChild(img);
-      }else if(boardSquares[i][j] === 'black'){
-        var img = document.createElement('img');
-        img.src = 'images/black.png';
-        img.className = 'checker-piece';
-        document.getElementById(i + '' + j).appendChild(img);
-      }
-    }
-  }
+function isEven(number){
+  return number % 2 === 0;
 }
