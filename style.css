@@ -29,9 +29,18 @@ h1{
   background-color: black;
   float: left;
 }
+.yellow-cell{
+  width: 90px;
+  height: 90px;
+  background-color: yellow;
+  float: left;
+}
 .black-piece{
   content:url(images/black.png);
 }
 .red-piece{
-  content:url(images/red.png);  
+  background-size: 78px 78px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-image:url(images/red.png);
 }

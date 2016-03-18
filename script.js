@@ -52,3 +52,42 @@ function buildBoard(){
 function isEven(number){
   return number % 2 === 0;
 }
+
+function movePiece(cell){
+  console.log(cell + 'has been clicked!');
+  var initialCellClicked = cell;
+  checkAvailableMoves(cell);
+}
+function checkAvailableMoves(cell){
+  if(boardArray[cell[0]][cell[1]].status === 'piece' && boardArray[cell[0]][cell[1]].piece === 'black'){
+    blackCheckLeft(cell);
+    blackCheckRight(cell);
+  }else if(boardArray[cell[0]][cell[1]].status === 'piece' && boardArray[cell[0]][cell[1]].piece === 'red'){
+    redCheckLeft(cell);
+    redCheckRight(cell);
+  }
+}
+function blackCheckLeft(cell){
+  var row = parseFloat(cell[0]) - 1;
+  var cell = parseFloat(cell[1]) - 1;
+  var id = row + '' + cell ;
+  document.getElementById(id).setAttribute('class', 'yellow-cell');
+}
+function blackCheckRight(cell){
+  var row = parseFloat(cell[0]) - 1;
+  var cell = parseFloat(cell[1]) + 1;
+  var id = row + '' + cell ;
+  document.getElementById(id).setAttribute('class', 'yellow-cell');
+}
+function redCheckLeft(cell){
+  var row = parseFloat(cell[0]) + 1;
+  var cell = parseFloat(cell[1]) - 1;
+  var id = row + '' + cell ;
+  document.getElementById(id).setAttribute('class', 'yellow-cell');
+}
+function redCheckRight(cell){
+  var row = parseFloat(cell[0]) + 1;
+  var cell = parseFloat(cell[1]) + 1;
+  var id = row + '' + cell ;
+  document.getElementById(id).setAttribute('class', 'yellow-cell');
+}
