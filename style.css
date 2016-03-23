@@ -32,7 +32,7 @@ h1{
 .yellow-cell{
   width: 90px;
   height: 90px;
-  background-color: yellow;
+  background-color: #FFFA56;
   float: left;
 }
 .black-piece{

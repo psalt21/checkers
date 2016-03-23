@@ -54,7 +54,6 @@ function isEven(number){
 }
 
 function movePiece(cell){
-  console.log(cell + 'has been clicked!');
   var initialCellClicked = cell;
   checkAvailableMoves(cell);
 }
@@ -71,27 +70,39 @@ function blackCheckLeft(cell){
   var row = parseFloat(cell[0]) - 1;
   var cell = parseFloat(cell[1]) - 1;
   var id = row + '' + cell;
-  if(id >= 0){
+  var currentCellArrayPosition = boardArray[row][cell];
+  if(id >= 0 && currentCellArrayPosition.status === 'none'){
     document.getElementById(id).setAttribute('class', 'yellow-cell');
+    currentCellArrayPosition.color = 'yellow';
   }
 }
 function blackCheckRight(cell){
   var row = parseFloat(cell[0]) - 1;
   var cell = parseFloat(cell[1]) + 1;
   var id = row + '' + cell;
-  document.getElementById(id).setAttribute('class', 'yellow-cell');
+  var currentCellArrayPosition = boardArray[row][cell];
+  if(currentCellArrayPosition.status === 'none'){
+    document.getElementById(id).setAttribute('class', 'yellow-cell');
+    currentCellArrayPosition.color = 'yellow';
+  }
 }
 function redCheckLeft(cell){
   var row = parseFloat(cell[0]) + 1;
   var cell = parseFloat(cell[1]) - 1;
   var id = row + '' + cell;
-  if(id >= 0){
+  var currentCellArrayPosition = boardArray[row][cell];
+  if(id >= 0 && currentCellArrayPosition.status === 'none'){
     document.getElementById(id).setAttribute('class', 'yellow-cell');
+    currentCellArrayPosition.color = 'yellow';
   }
 }
 function redCheckRight(cell){
   var row = parseFloat(cell[0]) + 1;
   var cell = parseFloat(cell[1]) + 1;
   var id = row + '' + cell;
-  document.getElementById(id).setAttribute('class', 'yellow-cell');
+  var currentCellArrayPosition = boardArray[row][cell];
+  if(currentCellArrayPosition.status === 'none'){
+    document.getElementById(id).setAttribute('class', 'yellow-cell');
+    currentCellArrayPosition.color = 'yellow';
+  }
 }
