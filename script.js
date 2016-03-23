@@ -70,24 +70,28 @@ function checkAvailableMoves(cell){
 function blackCheckLeft(cell){
   var row = parseFloat(cell[0]) - 1;
   var cell = parseFloat(cell[1]) - 1;
-  var id = row + '' + cell ;
-  document.getElementById(id).setAttribute('class', 'yellow-cell');
+  var id = row + '' + cell;
+  if(id >= 0){
+    document.getElementById(id).setAttribute('class', 'yellow-cell');
+  }
 }
 function blackCheckRight(cell){
   var row = parseFloat(cell[0]) - 1;
   var cell = parseFloat(cell[1]) + 1;
-  var id = row + '' + cell ;
+  var id = row + '' + cell;
   document.getElementById(id).setAttribute('class', 'yellow-cell');
 }
 function redCheckLeft(cell){
   var row = parseFloat(cell[0]) + 1;
   var cell = parseFloat(cell[1]) - 1;
-  var id = row + '' + cell ;
-  document.getElementById(id).setAttribute('class', 'yellow-cell');
+  var id = row + '' + cell;
+  if(id >= 0){
+    document.getElementById(id).setAttribute('class', 'yellow-cell');
+  }
 }
 function redCheckRight(cell){
   var row = parseFloat(cell[0]) + 1;
   var cell = parseFloat(cell[1]) + 1;
-  var id = row + '' + cell ;
+  var id = row + '' + cell;
   document.getElementById(id).setAttribute('class', 'yellow-cell');
 }
