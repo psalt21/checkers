@@ -1,8 +1,13 @@
+var currentSelectedPiece = 0;
+var isFirstClickForTurn = true;
 var boardArray = [];
+var currentTurn = 0;
+var currentColorTurn = 'black';
+var moveOnRightPosition = 0;
+var moveOnLeftPosition = 0;
 
 (function setup(){
   buildBoard();
-  // setPieces();
 })();
 
 function buildBoard(){
@@ -26,8 +31,22 @@ function buildBoard(){
         cell.setAttribute('class', 'white-cell');
         cellObject.color = 'white';
         cell.addEventListener('click', function (event){
-          console.log(event);
-          movePiece(event.target.id);
+          var row = parseFloat(event.target.id[0]);
+          var cell = parseFloat(event.target.id[1]);
+          var id = row + '' + cell;
+          if(isFirstClickForTurn === true){
+            currentSelectedPiece = id;
+            determineCurrentColorTurn();
+          }
+          var currentSelectedPieceColor = boardArray[currentSelectedPiece[0]][currentSelectedPiece[1]].piece;
+          if(isFirstClickForTurn === true && currentSelectedPieceColor === currentColorTurn){
+            checkAvailableMoves(id);
+            isFirstClickForTurn = false;
+          }else if(isFirstClickForTurn === false && currentSelectedPieceColor === currentColorTurn){
+            movePiece(id);
+            isFirstClickForTurn = true;
+          }
+
         });
         if(rowId < 3){
           cell.setAttribute('class', 'white-cell red-piece');
@@ -54,8 +73,25 @@ function isEven(number){
 }
 
 function movePiece(cell){
-  var initialCellClicked = cell;
-  checkAvailableMoves(cell);
+  var cellInfo = getCellInfo(cell);
+  var id = cellInfo.id;
+  var currentCellArrayPosition = cellInfo.cellObj;
+  var moveLocation = document.getElementById(id);
+  var initialLocation = document.getElementById(currentSelectedPiece);
+  var currentSelectedPieceColor = boardArray[currentSelectedPiece[0]][currentSelectedPiece[1]].piece;
+  if(currentCellArrayPosition.status === 'none' && currentCellArrayPosition.color === 'yellow'){
+    changeYellowSquareToWhite();
+    moveLocation.setAttribute('class', 'white-cell ' + currentSelectedPieceColor + '-piece');
+    currentCellArrayPosition.status = 'piece';
+    currentCellArrayPosition.piece = currentSelectedPieceColor;
+    currentCellArrayPosition.color = 'white';
+    initialLocation.status = 'none';
+    initialLocation.piece = '';
+    initialLocation.setAttribute('class', 'white-cell');
+    isFirstClickForTurn = true;
+    currentTurn++;
+  }
+
 }
 function checkAvailableMoves(cell){
   if(boardArray[cell[0]][cell[1]].status === 'piece' && boardArray[cell[0]][cell[1]].piece === 'black'){
@@ -67,42 +103,73 @@ function checkAvailableMoves(cell){
   }
 }
 function blackCheckLeft(cell){
-  var row = parseFloat(cell[0]) - 1;
-  var cell = parseFloat(cell[1]) - 1;
-  var id = row + '' + cell;
-  var currentCellArrayPosition = boardArray[row][cell];
-  if(id >= 0 && currentCellArrayPosition.status === 'none'){
+  var cellInfo = getCellInfo(cell, '-', '-');
+  var id = cellInfo.id;
+  var currentCellArrayPosition = cellInfo.cellObj;
+  if(cell[1] > 0 && currentCellArrayPosition.status === 'none'){
     document.getElementById(id).setAttribute('class', 'yellow-cell');
     currentCellArrayPosition.color = 'yellow';
+    moveOnLeftPosition = id;
   }
 }
 function blackCheckRight(cell){
-  var row = parseFloat(cell[0]) - 1;
-  var cell = parseFloat(cell[1]) + 1;
-  var id = row + '' + cell;
-  var currentCellArrayPosition = boardArray[row][cell];
-  if(currentCellArrayPosition.status === 'none'){
+  var cellInfo = getCellInfo(cell, '-', '+');
+  var id = cellInfo.id;
+  var currentCellArrayPosition = cellInfo.cellObj;
+  if(cell[1] < 8 && currentCellArrayPosition.status === 'none'){
     document.getElementById(id).setAttribute('class', 'yellow-cell');
     currentCellArrayPosition.color = 'yellow';
+    moveOnRightPosition = id;
   }
 }
 function redCheckLeft(cell){
-  var row = parseFloat(cell[0]) + 1;
-  var cell = parseFloat(cell[1]) - 1;
-  var id = row + '' + cell;
-  var currentCellArrayPosition = boardArray[row][cell];
-  if(id >= 0 && currentCellArrayPosition.status === 'none'){
+  var cellInfo = getCellInfo(cell, '+', '-');
+  var id = cellInfo.id;
+  var currentCellArrayPosition = cellInfo.cellObj;
+  if(cell[1] >= 0 && currentCellArrayPosition.status === 'none'){
     document.getElementById(id).setAttribute('class', 'yellow-cell');
     currentCellArrayPosition.color = 'yellow';
+    moveOnLeftPosition = id;
   }
 }
 function redCheckRight(cell){
-  var row = parseFloat(cell[0]) + 1;
-  var cell = parseFloat(cell[1]) + 1;
-  var id = row + '' + cell;
-  var currentCellArrayPosition = boardArray[row][cell];
-  if(currentCellArrayPosition.status === 'none'){
+  var cellInfo = getCellInfo(cell, '+', '+')
+  var id = cellInfo.id;
+  var currentCellArrayPosition = cellInfo.cellObj;
+  if(cell[1] < 8 && currentCellArrayPosition.status === 'none'){
     document.getElementById(id).setAttribute('class', 'yellow-cell');
     currentCellArrayPosition.color = 'yellow';
+    moveOnRightPosition = id;
   }
+}
+function getCellInfo(cell, rowOperator, cellOperator){
+    var row = rowOperator ? eval(parseFloat(cell[0]) + rowOperator + 1) : parseFloat(cell[0]);
+    var cell = cellOperator ? eval(parseFloat(cell[1]) + cellOperator + 1) : parseFloat(cell[1]);
+    var id = row + '' + cell;
+    var cellObj = boardArray[row][cell];
+    return {
+      id: id,
+      cellObj: cellObj
+    };
+}
+function determineCurrentColorTurn(){
+  if(currentTurn % 2 === 0){
+    currentColorTurn = 'black';
+  }else{
+    currentColorTurn = 'red';
+  }
+}
+function determineCurrentSelectedPieceColor(){
+  var currentSelectedPieceColor = boardArray[currentSelectedPiece[0]][currentSelectedPiece[1]].piece;
+  return currentSelectedPieceColor;
+  console.log(currentSelectedPieceColor);
+}
+function changeYellowSquareToWhite(){
+  var leftSquare = document.getElementById(moveOnLeftPosition);
+  var rightSquare = document.getElementById(moveOnRightPosition);
+  leftSquare.color = 'white';
+  leftSquare.setAttribute('class', 'white-cell');
+  rightSquare.color = 'white';
+  rightSquare.setAttribute('class', 'white-cell');
+
 }
