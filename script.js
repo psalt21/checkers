@@ -57,6 +57,7 @@ function buildBoard(){
           cellObject.status = 'piece';
         }else{
           cell.setAttribute('class', 'white-cell');
+          cellObject.piece = 'none';
         }
       }
       row.appendChild(cell);
@@ -106,40 +107,68 @@ function blackCheckLeft(cell){
   var cellInfo = getCellInfo(cell, '-', '-');
   var id = cellInfo.id;
   var currentCellArrayPosition = cellInfo.cellObj;
+  var jumpCellInfo = getJumpCellInfo(cell, '-', '-');
+  var jumpId = jumpCellInfo.id;
+  var currentJumpCellArrayPosition = jumpCellInfo.jumpCellObj;
   if(cell[1] > 0 && currentCellArrayPosition.status === 'none'){
     document.getElementById(id).setAttribute('class', 'yellow-cell');
     currentCellArrayPosition.color = 'yellow';
     moveOnLeftPosition = id;
+  }else if(cell[1] > 0 && currentCellArrayPosition.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
+    document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
+    currentJumpCellArrayPosition.color = 'yellow';
+    moveOnLeftPosition = jumpId;
   }
 }
 function blackCheckRight(cell){
   var cellInfo = getCellInfo(cell, '-', '+');
   var id = cellInfo.id;
   var currentCellArrayPosition = cellInfo.cellObj;
+  var jumpCellInfo = getJumpCellInfo(cell, '-', '+');
+  var jumpId = jumpCellInfo.id;
+  var currentJumpCellArrayPosition = jumpCellInfo.jumpCellObj;
   if(cell[1] < 7 && currentCellArrayPosition.status === 'none'){
     document.getElementById(id).setAttribute('class', 'yellow-cell');
     currentCellArrayPosition.color = 'yellow';
     moveOnRightPosition = id;
+  }else if(cell[1] < 7 && currentCellArrayPosition.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
+    document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
+    currentJumpCellArrayPosition.color = 'yellow';
+    moveOnLeftPosition = jumpId;
   }
 }
 function redCheckLeft(cell){
   var cellInfo = getCellInfo(cell, '+', '-');
   var id = cellInfo.id;
   var currentCellArrayPosition = cellInfo.cellObj;
-  if(cell[1] >= 0 && currentCellArrayPosition.status === 'none'){
+  var jumpCellInfo = getJumpCellInfo(cell, '+', '-');
+  var jumpId = jumpCellInfo.id;
+  var currentJumpCellArrayPosition = jumpCellInfo.jumpCellObj;
+  if(cell[1] > 0 && currentCellArrayPosition.status === 'none'){
     document.getElementById(id).setAttribute('class', 'yellow-cell');
     currentCellArrayPosition.color = 'yellow';
     moveOnLeftPosition = id;
+  }else if(cell[1] > 0 && currentCellArrayPosition.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
+    document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
+    currentJumpCellArrayPosition.color = 'yellow';
+    moveOnLeftPosition = jumpId;
   }
 }
 function redCheckRight(cell){
   var cellInfo = getCellInfo(cell, '+', '+')
   var id = cellInfo.id;
   var currentCellArrayPosition = cellInfo.cellObj;
-  if(cell[1] < 7 && currentCellArrayPosition.status === 'none'){
+  var jumpCellInfo = getJumpCellInfo(cell, '+', '+');
+  var jumpId = jumpCellInfo.id;
+  var currentJumpCellArrayPosition = jumpCellInfo.jumpCellObj;
+  if(currentCellArrayPosition[1] < 7 && currentCellArrayPosition.status === 'none'){
     document.getElementById(id).setAttribute('class', 'yellow-cell');
     currentCellArrayPosition.color = 'yellow';
     moveOnRightPosition = id;
+  }else if(currentCellArrayPosition[1] < 7 && currentCellArrayPosition.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
+    document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
+    currentJumpCellArrayPosition.color = 'yellow';
+    moveOnLeftPosition = jumpId;
   }
 }
 function getCellInfo(cell, rowOperator, cellOperator){
@@ -150,6 +179,16 @@ function getCellInfo(cell, rowOperator, cellOperator){
     return {
       id: id,
       cellObj: cellObj
+    };
+}
+function getJumpCellInfo(cell, rowOperator, cellOperator){
+    var row = rowOperator ? eval(parseFloat(cell[0]) + rowOperator + 2) : parseFloat(cell[0]);
+    var cell = cellOperator ? eval(parseFloat(cell[1]) + cellOperator + 2) : parseFloat(cell[1]);
+    var id = row + '' + cell;
+    var jumpCellObj = boardArray[row][cell];
+    return {
+      id: id,
+      jumpCellObj: jumpCellObj
     };
 }
 function determineCurrentColorTurn(){
