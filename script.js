@@ -44,7 +44,6 @@ function buildBoard(){
             isFirstClickForTurn = false;
           }else if(isFirstClickForTurn === false && currentSelectedPieceColor === currentColorTurn && boardArray[id[0]][id[1]].color === 'yellow'){
             movePiece(id);
-            isFirstClickForTurn = true;
           }
 
         });
@@ -90,6 +89,7 @@ function movePiece(cell){
     initialLocation.setAttribute('class', 'white-cell');
     isFirstClickForTurn = true;
     currentTurn++;
+    isFirstClickForTurn = true;
   }
 
 }
@@ -167,11 +167,11 @@ function determineCurrentSelectedPieceColor(){
 function changeYellowSquareToWhite(){
   var leftSquare = document.getElementById(moveOnLeftPosition);
   var rightSquare = document.getElementById(moveOnRightPosition);
-  leftSquare.color = 'white';
+  boardArray[moveOnLeftPosition[0]][moveOnLeftPosition[1]].color = 'white';
   if(boardArray[moveOnLeftPosition[0]][moveOnLeftPosition[1]].status === 'none'){
     leftSquare.setAttribute('class', 'white-cell');
   }
-  rightSquare.color = 'white';
+  boardArray[moveOnRightPosition[0]][moveOnRightPosition[1]].color = 'white';
   if(boardArray[moveOnRightPosition[0]][moveOnRightPosition[1]].status === 'none'){
     rightSquare.setAttribute('class', 'white-cell');
   }
