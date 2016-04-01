@@ -42,7 +42,7 @@ function buildBoard(){
           if(isFirstClickForTurn === true && currentSelectedPieceColor === currentColorTurn){
             checkAvailableMoves(id);
             isFirstClickForTurn = false;
-          }else if(isFirstClickForTurn === false && currentSelectedPieceColor === currentColorTurn){
+          }else if(isFirstClickForTurn === false && currentSelectedPieceColor === currentColorTurn && boardArray[id[0]][id[1]].color === 'yellow'){
             movePiece(id);
             isFirstClickForTurn = true;
           }
@@ -85,8 +85,8 @@ function movePiece(cell){
     currentCellArrayPosition.status = 'piece';
     currentCellArrayPosition.piece = currentSelectedPieceColor;
     currentCellArrayPosition.color = 'white';
-    initialLocation.status = 'none';
-    initialLocation.piece = '';
+    boardArray[currentSelectedPiece[0]][currentSelectedPiece[1]].status = 'none';
+    boardArray[currentSelectedPiece[0]][currentSelectedPiece[1]].piece = '';
     initialLocation.setAttribute('class', 'white-cell');
     isFirstClickForTurn = true;
     currentTurn++;
@@ -116,7 +116,7 @@ function blackCheckRight(cell){
   var cellInfo = getCellInfo(cell, '-', '+');
   var id = cellInfo.id;
   var currentCellArrayPosition = cellInfo.cellObj;
-  if(cell[1] < 8 && currentCellArrayPosition.status === 'none'){
+  if(cell[1] < 7 && currentCellArrayPosition.status === 'none'){
     document.getElementById(id).setAttribute('class', 'yellow-cell');
     currentCellArrayPosition.color = 'yellow';
     moveOnRightPosition = id;
@@ -136,7 +136,7 @@ function redCheckRight(cell){
   var cellInfo = getCellInfo(cell, '+', '+')
   var id = cellInfo.id;
   var currentCellArrayPosition = cellInfo.cellObj;
-  if(cell[1] < 8 && currentCellArrayPosition.status === 'none'){
+  if(cell[1] < 7 && currentCellArrayPosition.status === 'none'){
     document.getElementById(id).setAttribute('class', 'yellow-cell');
     currentCellArrayPosition.color = 'yellow';
     moveOnRightPosition = id;
@@ -168,8 +168,11 @@ function changeYellowSquareToWhite(){
   var leftSquare = document.getElementById(moveOnLeftPosition);
   var rightSquare = document.getElementById(moveOnRightPosition);
   leftSquare.color = 'white';
-  leftSquare.setAttribute('class', 'white-cell');
+  if(boardArray[moveOnLeftPosition[0]][moveOnLeftPosition[1]].status === 'none'){
+    leftSquare.setAttribute('class', 'white-cell');
+  }
   rightSquare.color = 'white';
-  rightSquare.setAttribute('class', 'white-cell');
-
+  if(boardArray[moveOnRightPosition[0]][moveOnRightPosition[1]].status === 'none'){
+    rightSquare.setAttribute('class', 'white-cell');
+  }
 }
