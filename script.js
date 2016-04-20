@@ -59,11 +59,11 @@ function determineAction(event){
   var row = parseFloat(event.target.id[0]);
   var cell = parseFloat(event.target.id[1]);
   var id = row + '' + cell;
-  if(boardArray[row][cell].action === 'none' && boardArray[row][cell].piece === currentColorTurn && isFirstClickForTurn === true){
+  if(boardArray[row][cell].action === 'none' && boardArray[row][cell].piece === currentColorTurn && isFirstClickForTurn && isInbounds(id)){
     currentSelectedPiece = id;
     boardArray[row][cell].action = 'clicked';
     isFirstClickForTurn = false;
-    checkAvailableMoves(id, row, cell);
+    checkAvailableMoves(id, row);
   }else if(boardArray[row][cell].action === 'clicked'){
     boardArray[row][cell].action = 'none';
     clearAvailableCells();
@@ -74,15 +74,72 @@ function determineAction(event){
   }
 }
 
-function checkAvailableMoves(id, row){
-  if(row > 0 && boardArray[id[0]][id[1]].status === 'piece' && boardArray[id[0]][id[1]].piece === 'black' && isInbounds(id) === true){
-    singleMoveBlackCheckLeft(id, row);
-    singleMoveBlackCheckRight(id, row);
-  }else if(row < 7 && boardArray[id[0]][id[1]].status === 'piece' && boardArray[id[0]][id[1]].piece === 'red' && isInbounds(id) === true){
-    singleMoveRedCheckLeft(id, row);
-    singleMoveRedCheckRight(id, row);
-  }
+function deconstructId(id){
+  return {
+    row: id[0],
+    cell: id[1]
+  };
+};
+
+function checkAvailableMoves(id){
+  var targets = getTargets(id);
+  //use these targets to determine where you can go
 }
+
+function getTargets(id){
+  var loc = deconstructId(id);
+  var dir = currentColorTurn === 'black' ? -1 : 1;
+  var targets = [];
+  //check left no jump
+  if(isOnBoard(loc.row + dir, loc.cell - 1)){
+    targets.push({
+      row: loc.row + dir,
+      cell: loc.cell - 1
+    });
+  }
+  //check left with jump
+  if(canJumpToCell(loc.row + (dir * 2), loc.cell - 2, dir, -1)){
+    targets.push({
+      row: loc.row + (dir * 2),
+      cell: loc.cell - 2
+    });
+  }
+
+}
+
+function isOnBoard(row,cell){
+  return row <= 7 && row >= 0 && cell <= 7 && row >= 0;
+}
+
+function canJumpToCell(row,cell,vDir,hDir){
+  //check if target is empty and on board
+  if(!isOnBoard(row,cell) || !cellIsEmpty(row,cell)){
+    return false;
+  }
+  //check if intermediate cell is occupied by the enemy
+  else if(!cellIsEnemy(row - vDir,cell - hDir)){
+    return false;
+  }
+  return true;
+}
+
+function cellIsEmpty(row,cell){
+
+}
+
+function cellIsEnemy(row,cell){
+
+}
+
+// function checkAvailableMoves(id, row){
+//   if(row > 0 && boardArray[id[0]][id[1]].status === 'piece' && boardArray[id[0]][id[1]].piece === 'black' && isInbounds(id) === true){
+//     singleMoveBlackCheckLeft(id, row);
+//     singleMoveBlackCheckRight(id, row);
+//   }else if(row < 7 && boardArray[id[0]][id[1]].status === 'piece' && boardArray[id[0]][id[1]].piece === 'red' && isInbounds(id) === true){
+//     singleMoveRedCheckLeft(id, row);
+//     singleMoveRedCheckRight(id, row);
+//   }
+// }
 
 function clearAvailableCells(){
   for(var i = 0; i < availMoveCells.length; i++){
@@ -131,14 +188,14 @@ function singleMoveBlackCheckLeft(cell, row){
     availMoveCells.push(id);
     isFirstClickForTurn = false;
   }else if(row > 2 && boardArray[id[0]][id[1]].status === 'piece' && boardArray[id[0]][id[1]].piece === 'black' && isInbounds(id) === true){
-    jumpMoveBlackCheckLeft(cell, row);
+    jumpMoveBlackCheckLeft(cell, row, currentCellArrayPosition);
   }
 }
-function jumpMoveBlackCheckLeft(cell, row){
+function jumpMoveBlackCheckLeft(cell, row, currentCell){
   var jumpCellInfo = getJumpCellInfo(cell, '-', '-');
   var jumpId = jumpCellInfo.id;
   var currentJumpCellArrayPosition = jumpCellInfo.jumpCellObj;
-  if(currentCellArrayPosition.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
+  if(currentCell.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
     document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
     currentJumpCellArrayPosition.color = 'yellow';
     currentJumpCellArrayPosition.action = 'available';
@@ -160,14 +217,14 @@ function singleMoveBlackCheckRight(cell, row){
     availMoveCells.push(id);
     isFirstClickForTurn = false;
   }else if(row > 2 && boardArray[id[0]][id[1]].status === 'piece' && boardArray[id[0]][id[1]].piece === 'black' && isInbounds(id) === true){
-    jumpMoveBlackCheckRight(cell, row);
+    jumpMoveBlackCheckRight(cell, row, currentCellArrayPosition);
   }
 }
-function jumpMoveBlackCheckRight(cell, row){
+function jumpMoveBlackCheckRight(cell, row, currentCell){
   var jumpCellInfo = getJumpCellInfo(cell, '-', '+');
   var jumpId = jumpCellInfo.id;
   var currentJumpCellArrayPosition = jumpCellInfo.jumpCellObj;
-  if(currentCellArrayPosition.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
+  if(currentCell.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
     document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
     currentJumpCellArrayPosition.color = 'yellow';
     currentJumpCellArrayPosition.action = 'available';
@@ -189,14 +246,14 @@ function singleMoveRedCheckLeft(cell, row){
     availMoveCells.push(id);
     isFirstClickForTurn = false;
   }else if(row < 5 && boardArray[id[0]][id[1]].status === 'piece' && boardArray[id[0]][id[1]].piece === 'red' && isInbounds(id) === true){
-    jumpMoveRedCheckLeft(cell, row);
+    jumpMoveRedCheckLeft(cell, row, currentCellArrayPosition);
   }
 }
-function jumpMoveRedCheckLeft(cell, row){
+function jumpMoveRedCheckLeft(cell, row, currentCell){
   var jumpCellInfo = getJumpCellInfo(cell, '+', '-');
   var jumpId = jumpCellInfo.id;
   var currentJumpCellArrayPosition = jumpCellInfo.jumpCellObj;
-  if(currentCellArrayPosition.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
+  if(currentCell.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
     document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
     currentJumpCellArrayPosition.color = 'yellow';
     currentJumpCellArrayPosition.action = 'available';
@@ -218,14 +275,14 @@ function singleMoveRedCheckRight(cell, row){
     availMoveCells.push(id);
     isFirstClickForTurn = false;
   }else if(row < 5 && boardArray[id[0]][id[1]].status === 'piece' && boardArray[id[0]][id[1]].piece === 'red' && isInbounds(id) === true){
-    jumpMoveRedCheckRight(cell, row);
+    jumpMoveRedCheckRight(cell, row, currentCellArrayPosition);
   }
 }
-function jumpMoveRedCheckRight(cell, row){
+function jumpMoveRedCheckRight(cell, row, currentCell){
   var jumpCellInfo = getJumpCellInfo(cell, '+', '+');
   var jumpId = jumpCellInfo.id;
   var currentJumpCellArrayPosition = jumpCellInfo.jumpCellObj;
-  if(currentCellArrayPosition.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
+  if(currentCell.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
     document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
     currentJumpCellArrayPosition.color = 'yellow';
     currentJumpCellArrayPosition.action = 'available';
