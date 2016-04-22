@@ -6,6 +6,7 @@ var currentTurn = 0;
 var currentColorTurn = 'black';
 var moveOnRightPosition = 'none';
 var moveOnLeftPosition = 'none';
+var firstMoveOnTurn = true;
 
 (function setup(){
   buildBoard();
@@ -66,7 +67,7 @@ function determineAction(event){
     boardArray[row][cell].action = 'clicked';
     isFirstClickForTurn = false;
     checkAvailableMoves(id, row);
-  // }else if(boardArray[row][cell].type === 'king'){
+  }else if(boardArray[row][cell].type === 'king'){
   // check available KING moves
   }else if(boardArray[row][cell].action === 'clicked'){
     boardArray[row][cell].action = 'none';
@@ -149,13 +150,25 @@ function movePiece(cell){
     boardArray[currentSelectedPiece[0]][currentSelectedPiece[1]].status = 'none';
     boardArray[currentSelectedPiece[0]][currentSelectedPiece[1]].piece = 'none';
     initialLocation.setAttribute('class', 'white-cell');
-    isFirstClickForTurn = true;
-    currentTurn++;
-    isFirstClickForTurn = true;
+    // isFirstClickForTurn = true;
+    // currentTurn++;
+    firstMoveOnTurn = false;
+    checkAdditionalJumpMoves(id);
   }
 }
 
-function singleMoveBlackCheckLeft(cell, row){
+function checkAdditionalJumpMoves(curCell){
+  var id = curCell;
+  if(boardArray[id[0]][id[1]].piece === 'black'){
+    jumpMoveBlackCheckLeft(id, null);
+    jumpMoveBlackCheckRight(id, null);
+  }else if(boardArray[id[0]][id[1]].piece === 'red'){
+    jumpMoveRedCheckLeft(id, null);
+    jumpMoveRedCheckRight(id, null);
+  }
+}
+
+function singleMoveBlackCheckLeft(cell){
   var cellInfo = getCellInfo(cell, '-', '-', 1);
   if(cellInfo.inBounds){
     var id = cellInfo.id;
@@ -168,27 +181,33 @@ function singleMoveBlackCheckLeft(cell, row){
       availMoveCells.push(id);
       isFirstClickForTurn = false;
     }else if(boardArray[id[0]][id[1]].status === 'piece' && boardArray[id[0]][id[1]].piece === 'red' && isInbounds(id) === true){
-      jumpMoveBlackCheckLeft(cell, row, currentCellArrayPosition);
+      jumpMoveBlackCheckLeft(cell, currentCellArrayPosition);
     }
   }
 }
-function jumpMoveBlackCheckLeft(cell, row, currentCell){
+function jumpMoveBlackCheckLeft(cell, currentCell){
   var jumpCellInfo = getCellInfo(cell, '-', '-', 2);
   if (jumpCellInfo.inBounds) {
     var jumpId = jumpCellInfo.id;
     var currentJumpCellArrayPosition = jumpCellInfo.cellObj;
-    if(currentCell.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
+    if(firstMoveOnTurn === true && currentCell.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
       document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
       currentJumpCellArrayPosition.color = 'yellow';
       currentJumpCellArrayPosition.action = 'available';
       // moveOnLeftPosition = jumpId;
       availMoveCells.push(jumpId);
       isFirstClickForTurn = false;
+    }else if(firstMoveOnTurn === false){
+      document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
+      currentJumpCellArrayPosition.color = 'yellow';
+      currentJumpCellArrayPosition.action = 'available';
+      // moveOnLeftPosition = jumpId;
+      availMoveCells.push(jumpId);
     }
   }
 }
 
-function singleMoveBlackCheckRight(cell, row){
+function singleMoveBlackCheckRight(cell){
   var cellInfo = getCellInfo(cell, '-', '+', 1);
   if(cellInfo.inBounds){
     var id = cellInfo.id;
@@ -201,27 +220,33 @@ function singleMoveBlackCheckRight(cell, row){
       availMoveCells.push(id);
       isFirstClickForTurn = false;
     }else if(boardArray[id[0]][id[1]].status === 'piece' && boardArray[id[0]][id[1]].piece === 'red' && isInbounds(id) === true){
-      jumpMoveBlackCheckRight(cell, row, currentCellArrayPosition);
+      jumpMoveBlackCheckRight(cell, currentCellArrayPosition);
     }
   }
 }
-function jumpMoveBlackCheckRight(cell, row, currentCell){
+function jumpMoveBlackCheckRight(cell, currentCell){
   var jumpCellInfo = getCellInfo(cell, '-', '+', 2);
   if(jumpCellInfo.inBounds){
     var jumpId = jumpCellInfo.id;
     var currentJumpCellArrayPosition = jumpCellInfo.cellObj;
-    if(currentCell.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
+    if(firstMoveOnTurn === true && currentCell.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
       document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
       currentJumpCellArrayPosition.color = 'yellow';
       currentJumpCellArrayPosition.action = 'available';
       // moveOnLeftPosition = jumpId;
       availMoveCells.push(jumpId);
       isFirstClickForTurn = false;
+    }else if(firstMoveOnTurn === false){
+      document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
+      currentJumpCellArrayPosition.color = 'yellow';
+      currentJumpCellArrayPosition.action = 'available';
+      // moveOnLeftPosition = jumpId;
+      availMoveCells.push(jumpId);
     }
   }
 }
 
-function singleMoveRedCheckLeft(cell, row){
+function singleMoveRedCheckLeft(cell){
   var cellInfo = getCellInfo(cell, '+', '-', 1);
   if(cellInfo.inBounds){
     var id = cellInfo.id;
@@ -234,27 +259,33 @@ function singleMoveRedCheckLeft(cell, row){
       availMoveCells.push(id);
       isFirstClickForTurn = false;
     }else if(boardArray[id[0]][id[1]].status === 'piece' && boardArray[id[0]][id[1]].piece === 'black' && isInbounds(id) === true){
-      jumpMoveRedCheckLeft(cell, row, currentCellArrayPosition);
+      jumpMoveRedCheckLeft(cell, currentCellArrayPosition);
     }
   }
 }
-function jumpMoveRedCheckLeft(cell, row, currentCell){
+function jumpMoveRedCheckLeft(cell, currentCell){
   var jumpCellInfo = getCellInfo(cell, '+', '-', 2);
   if(jumpCellInfo.inBounds){
     var jumpId = jumpCellInfo.id;
     var currentJumpCellArrayPosition = jumpCellInfo.cellObj;
-    if(currentCell.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
+    if(firstMoveOnTurn === true && currentCell.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
       document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
       currentJumpCellArrayPosition.color = 'yellow';
       currentJumpCellArrayPosition.action = 'available';
       // moveOnLeftPosition = jumpId;
       availMoveCells.push(jumpId);
       isFirstClickForTurn = false;
+    }else if(firstMoveOnTurn === false){
+      document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
+      currentJumpCellArrayPosition.color = 'yellow';
+      currentJumpCellArrayPosition.action = 'available';
+      // moveOnLeftPosition = jumpId;
+      availMoveCells.push(jumpId);
     }
   }
 }
 
-function singleMoveRedCheckRight(cell, row){
+function singleMoveRedCheckRight(cell){
   var cellInfo = getCellInfo(cell, '+', '+', 1);
   if(cellInfo.inBounds){
     var id = cellInfo.id;
@@ -267,22 +298,28 @@ function singleMoveRedCheckRight(cell, row){
       availMoveCells.push(id);
       isFirstClickForTurn = false;
     }else if(boardArray[id[0]][id[1]].status === 'piece' && boardArray[id[0]][id[1]].piece === 'black' && isInbounds(id) === true){
-      jumpMoveRedCheckRight(cell, row, currentCellArrayPosition);
+      jumpMoveRedCheckRight(cell, currentCellArrayPosition);
     }
   }
 }
-function jumpMoveRedCheckRight(cell, row, currentCell){
+function jumpMoveRedCheckRight(cell, currentCell){
   var jumpCellInfo = getCellInfo(cell, '+', '+', 2);
   if(jumpCellInfo.inBounds){
     var jumpId = jumpCellInfo.id;
     var currentJumpCellArrayPosition = jumpCellInfo.cellObj;
-    if(currentCell.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
+    if(firstMoveOnTurn === true && currentCell.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
       document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
       currentJumpCellArrayPosition.color = 'yellow';
       currentJumpCellArrayPosition.action = 'available';
       // moveOnLeftPosition = jumpId;
       availMoveCells.push(jumpId);
       isFirstClickForTurn = false;
+    }else if(firstMoveOnTurn === false){
+      document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
+      currentJumpCellArrayPosition.color = 'yellow';
+      currentJumpCellArrayPosition.action = 'available';
+      // moveOnLeftPosition = jumpId;
+      availMoveCells.push(jumpId);
     }
   }
 }
@@ -293,16 +330,6 @@ function isInbounds(cell){
   }
 }
 
-// function getCellInfo(cell, rowOperator, cellOperator){
-//     var row = rowOperator ? eval(parseFloat(cell[0]) + rowOperator + 1) : parseFloat(cell[0]);
-//     var cell = cellOperator ? eval(parseFloat(cell[1]) + cellOperator + 1) : parseFloat(cell[1]);
-//     var id = row + '' + cell;
-//     var cellObj = boardArray[row][cell];
-//     return {
-//       id: id,
-//       cellObj: cellObj
-//     };
-// }
 function getCellInfo(cell, rowOperator, cellOperator, distance){
     var row = rowOperator ? eval(parseFloat(cell[0]) + rowOperator + distance) : parseFloat(cell[0]);
     var cell = cellOperator ? eval(parseFloat(cell[1]) + cellOperator + distance) : parseFloat(cell[1]);
@@ -359,4 +386,9 @@ function cellClicked(event){
 
 function isEven(number){
   return number % 2 === 0;
+}
+
+function setUpNextTurn(){
+  isFirstClickForTurn = true;
+  currentTurn++;
 }
