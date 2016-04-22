@@ -38,10 +38,12 @@ function buildBoard(){
           cell.setAttribute('class', 'white-cell red-piece');
           cellObject.piece = 'red';
           cellObject.status = 'piece';
+          cellObject.type = 'normal';
         }else if(rowId > 4){
           cell.setAttribute('class', 'white-cell black-piece');
           cellObject.piece = 'black';
           cellObject.status = 'piece';
+          cellObject.type = 'normal';
         }else{
           cell.setAttribute('class', 'white-cell');
           cellObject.piece = 'none';
@@ -59,11 +61,13 @@ function determineAction(event){
   var row = parseFloat(event.target.id[0]);
   var cell = parseFloat(event.target.id[1]);
   var id = row + '' + cell;
-  if(boardArray[row][cell].action === 'none' && boardArray[row][cell].piece === currentColorTurn && isFirstClickForTurn && isInbounds(id)){
+  if(boardArray[row][cell].type === 'normal' && boardArray[row][cell].action === 'none' && boardArray[row][cell].piece === currentColorTurn && isFirstClickForTurn && isInbounds(id)){
     currentSelectedPiece = id;
     boardArray[row][cell].action = 'clicked';
     isFirstClickForTurn = false;
     checkAvailableMoves(id, row);
+  // }else if(boardArray[row][cell].type === 'king'){
+  // check available KING moves
   }else if(boardArray[row][cell].action === 'clicked'){
     boardArray[row][cell].action = 'none';
     clearAvailableCells();
@@ -80,50 +84,6 @@ function deconstructId(id){
     cell: id[1]
   };
 };
-
-// function checkAvailableMoves(id){
-//   var targets = getTargets(id);
-//   //use these targets to determine where you can go
-// }
-//
-// function getTargets(id){
-//   var loc = deconstructId(id);
-//   var dir = currentColorTurn === 'black' ? -1 : 1;
-//   var targets = [];
-//   //check left no jump
-//   if(isOnBoard(loc.row + dir, loc.cell - 1)){
-//     targets.push({
-//       row: loc.row + dir,
-//       cell: loc.cell - 1,
-//       move: 'single'
-//     });
-//   }
-//   //check left with jump
-//   if(canJumpToCell(loc.row + (dir * 2), loc.cell - 2, dir, -1)){
-//     targets.push({
-//       row: loc.row + (dir * 2),
-//       cell: loc.cell - 2,
-//       move: 'jump'
-//     });
-//   }
-//   // check right no jump
-//   if(isOnBoard(loc.row - dir, loc.cell + 1)){
-//     targets.push({
-//       row: loc.row - dir,
-//       cell: loc.cell + 1,
-//       move: 'single'
-//     });
-//   }
-//   // check right with jump
-//   if(canJumpToCell(loc.row - (dir * 2), loc.cell + 2, dir, +1)){
-//     targets.push({
-//       row: loc.row + (dir * 2),
-//       cell: loc.cell - 2,
-//       move: 'jump'
-//     });
-//   }
-//   return targets;
-// }
 
 function isOnBoard(row,cell){
   return row <= 7 && row >= 0 && cell <= 7 && row >= 0;
@@ -182,6 +142,7 @@ function movePiece(cell){
     clearAvailableCells();
     moveLocation.setAttribute('class', 'white-cell ' + currentSelectedPieceColor + '-piece');
     currentCellArrayPosition.status = 'piece';
+    currentCellArrayPosition.type = 'normal';
     currentCellArrayPosition.piece = currentSelectedPieceColor;
     currentCellArrayPosition.color = 'white';
     currentCellArrayPosition.action = 'none';
@@ -215,7 +176,7 @@ function jumpMoveBlackCheckLeft(cell, row, currentCell){
   var jumpCellInfo = getCellInfo(cell, '-', '-', 2);
   if (jumpCellInfo.inBounds) {
     var jumpId = jumpCellInfo.id;
-    var currentJumpCellArrayPosition = jumpCellInfo.jumpCellObj;
+    var currentJumpCellArrayPosition = jumpCellInfo.cellObj;
     if(currentCell.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
       document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
       currentJumpCellArrayPosition.color = 'yellow';
@@ -248,7 +209,7 @@ function jumpMoveBlackCheckRight(cell, row, currentCell){
   var jumpCellInfo = getCellInfo(cell, '-', '+', 2);
   if(jumpCellInfo.inBounds){
     var jumpId = jumpCellInfo.id;
-    var currentJumpCellArrayPosition = jumpCellInfo.jumpCellObj;
+    var currentJumpCellArrayPosition = jumpCellInfo.cellObj;
     if(currentCell.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
       document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
       currentJumpCellArrayPosition.color = 'yellow';
@@ -281,7 +242,7 @@ function jumpMoveRedCheckLeft(cell, row, currentCell){
   var jumpCellInfo = getCellInfo(cell, '+', '-', 2);
   if(jumpCellInfo.inBounds){
     var jumpId = jumpCellInfo.id;
-    var currentJumpCellArrayPosition = jumpCellInfo.jumpCellObj;
+    var currentJumpCellArrayPosition = jumpCellInfo.cellObj;
     if(currentCell.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
       document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
       currentJumpCellArrayPosition.color = 'yellow';
@@ -314,7 +275,7 @@ function jumpMoveRedCheckRight(cell, row, currentCell){
   var jumpCellInfo = getCellInfo(cell, '+', '+', 2);
   if(jumpCellInfo.inBounds){
     var jumpId = jumpCellInfo.id;
-    var currentJumpCellArrayPosition = jumpCellInfo.jumpCellObj;
+    var currentJumpCellArrayPosition = jumpCellInfo.cellObj;
     if(currentCell.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
       document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
       currentJumpCellArrayPosition.color = 'yellow';
@@ -347,10 +308,10 @@ function getCellInfo(cell, rowOperator, cellOperator, distance){
     var cell = cellOperator ? eval(parseFloat(cell[1]) + cellOperator + distance) : parseFloat(cell[1]);
     var id = row + '' + cell;
     if(isInbounds(id)) {
-      var jumpCellObj = boardArray[row][cell];
+      var cellObj = boardArray[row][cell];
       return {
         id: id,
-        jumpCellObj: jumpCellObj,
+        cellObj: cellObj,
         inBounds: true
       }
     } else {
