@@ -7,6 +7,7 @@ var currentColorTurn = 'black';
 var moveOnRightPosition = 'none';
 var moveOnLeftPosition = 'none';
 var firstMoveOnTurn = true;
+var pieceJumped = false;
 
 (function setup(){
   buildBoard();
@@ -84,10 +85,45 @@ function deconstructId(id){
     row: id[0],
     cell: id[1]
   };
-};
+}
 
-function isOnBoard(row,cell){
-  return row <= 7 && row >= 0 && cell <= 7 && row >= 0;
+function constructId(row, cell){
+  return row + cell;
+}
+
+function checkAdditionalJumps(id){
+  clearAvailableCells();
+  var targets = getJumps(id);
+  changeAvailCellsYellow();
+  //use these targets to determine where you can go
+}
+
+function changeAvailCellsYellow(){
+  for(var i = 0; i < availMoveCells.length; i++){
+    var id = availMoveCells[i];
+    var cell = boardArray[id[0]][id[1]];
+    cell.action = 'available';
+    cell.color = 'yellow';
+    document.getElementById(id).setAttribute('class', 'yellow-cell');
+  }
+}
+
+function getJumps(id){
+  var loc = deconstructId(id);
+  var dir = currentColorTurn === 'black' ? -1 : 1;
+  var targets = [];
+  // check left jump
+  if(canJumpToCell(loc.row + dir * 2, loc.cell -2, dir, -1)){
+    availMoveCells.push(
+      constructId(loc.row + dir * 2, loc.cell -2)
+    );
+  }
+  // check right jump
+  if(canJumpToCell(loc.row + dir * 2, loc.cell +2, dir, 1)){
+    availMoveCells.push(
+      constructId(loc.row + dir * 2, loc.cell + 2)
+    );
+  }
 }
 
 function canJumpToCell(row,cell,vDir,hDir){
@@ -103,12 +139,39 @@ function canJumpToCell(row,cell,vDir,hDir){
 }
 
 function cellIsEmpty(row,cell){
-
+  return boardArray[row][cell].status === 'none';
 }
 
 function cellIsEnemy(row,cell){
-
+  return boardArray[row][cell].status === 'piece' && boardArray[row][cell].piece !== currentColorTurn;
 }
+
+function isOnBoard(row,cell){
+  return row <= 7 && row >= 0 && cell <= 7 && row >= 0;
+}
+
+function getTargets(id){
+  var loc = deconstructId(id);
+  var dir = currentColorTurn === 'black' ? -1 : 1;
+  var targets = [];
+  //check left no jump
+  if(isOnBoard(loc.row + dir, loc.cell - 1)){
+    targets.push({
+      row: loc.row + dir,
+      cell: loc.cell - 1
+    });
+  }
+
+  //check left with jump
+  if(canJumpToCell(loc.row + (dir * 2), loc.cell - 2, dir, -1)){
+    targets.push({
+      row: loc.row + (dir * 2),
+      cell: loc.cell - 2
+    });
+  }
+}
+
+
 
 function checkAvailableMoves(id, row){
   if(boardArray[id[0]][id[1]].status === 'piece' && boardArray[id[0]][id[1]].piece === 'black' && isInbounds(id) === true){
@@ -130,6 +193,7 @@ function clearAvailableCells(){
       resetColor(id);
     }
   }
+  availMoveCells = [];
 }
 
 function movePiece(cell){
@@ -153,20 +217,27 @@ function movePiece(cell){
     // isFirstClickForTurn = true;
     // currentTurn++;
     firstMoveOnTurn = false;
-    checkAdditionalJumpMoves(id);
+    currentSelectedPiece = id;
+    if(currentCellArrayPosition.jumpLocation){
+      checkAdditionalJumps(id);
+    }
+    setUpNextTurn();
   }
 }
 
-function checkAdditionalJumpMoves(curCell){
-  var id = curCell;
-  if(boardArray[id[0]][id[1]].piece === 'black'){
-    jumpMoveBlackCheckLeft(id, null);
-    jumpMoveBlackCheckRight(id, null);
-  }else if(boardArray[id[0]][id[1]].piece === 'red'){
-    jumpMoveRedCheckLeft(id, null);
-    jumpMoveRedCheckRight(id, null);
-  }
-}
+// function checkAdditionalJumpMoves(curCell){
+//   var id = curCell;
+//   color = boardArray[id[0]][id[1]].piece
+//   if(color === 'black'){
+//     if()
+//       jumpMoveBlackCheckLeft(id, null);
+//     }
+//     jumpMoveBlackCheckRight(id, null);
+//   }else if(boardArray[id[0]][id[1]].piece === 'red'){
+//     jumpMoveRedCheckLeft(id, null);
+//     jumpMoveRedCheckRight(id, null);
+//   }
+// }
 
 function singleMoveBlackCheckLeft(cell){
   var cellInfo = getCellInfo(cell, '-', '-', 1);
@@ -194,6 +265,7 @@ function jumpMoveBlackCheckLeft(cell, currentCell){
       document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
       currentJumpCellArrayPosition.color = 'yellow';
       currentJumpCellArrayPosition.action = 'available';
+      currentJumpCellArrayPosition.jumpLocation = true; // if(obj.jumpLocation) {}
       // moveOnLeftPosition = jumpId;
       availMoveCells.push(jumpId);
       isFirstClickForTurn = false;
@@ -233,6 +305,7 @@ function jumpMoveBlackCheckRight(cell, currentCell){
       document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
       currentJumpCellArrayPosition.color = 'yellow';
       currentJumpCellArrayPosition.action = 'available';
+      currentJumpCellArrayPosition.jumpLocation = true;
       // moveOnLeftPosition = jumpId;
       availMoveCells.push(jumpId);
       isFirstClickForTurn = false;
@@ -272,6 +345,7 @@ function jumpMoveRedCheckLeft(cell, currentCell){
       document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
       currentJumpCellArrayPosition.color = 'yellow';
       currentJumpCellArrayPosition.action = 'available';
+      currentJumpCellArrayPosition.jumpLocation = true;
       // moveOnLeftPosition = jumpId;
       availMoveCells.push(jumpId);
       isFirstClickForTurn = false;
@@ -311,6 +385,7 @@ function jumpMoveRedCheckRight(cell, currentCell){
       document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
       currentJumpCellArrayPosition.color = 'yellow';
       currentJumpCellArrayPosition.action = 'available';
+      currentJumpCellArrayPosition.jumpLocation = true;
       // moveOnLeftPosition = jumpId;
       availMoveCells.push(jumpId);
       isFirstClickForTurn = false;
