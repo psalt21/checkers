@@ -1,11 +1,10 @@
 var boardArray = [];
 var availMoveCells = [];
-var currentSelectedPiece = 'none';
-var isFirstClickForTurn = true;
+var currentSelectedPiece = null;
 var currentTurn = 0;
 var currentColorTurn = 'black';
-var moveOnRightPosition = 'none';
-var moveOnLeftPosition = 'none';
+var moveOnRightPosition = null;
+var moveOnLeftPosition = null;
 var firstMoveOnTurn = true;
 var pieceJumped = false;
 
@@ -23,18 +22,18 @@ function buildBoard(){
     for(var cellId = 0; cellId < 8; cellId++){
       var cellObject = {
         id: rowId + '' + cellId,
-        status: 'none',
+        status: null,
       };
       var cell = document.createElement('div');
       cell.setAttribute('id', rowId + '' + cellId);
       if(isEven(rowId + cellId)){
         cell.setAttribute('class', 'black-cell');
         cellObject.color = 'black';
-        cellObject.action = 'none';
+        cellObject.action = null;
       }else{
         cell.setAttribute('class', 'white-cell');
         cellObject.color = 'white';
-        cellObject.action = 'none';
+        cellObject.action = null;
         cell.addEventListener('click', cellClicked);
         if(rowId < 3){
           cell.setAttribute('class', 'white-cell red-piece');
@@ -48,7 +47,7 @@ function buildBoard(){
           cellObject.type = 'normal';
         }else{
           cell.setAttribute('class', 'white-cell');
-          cellObject.piece = 'none';
+          cellObject.piece = null;
         }
       }
       row.appendChild(cell);
@@ -62,28 +61,31 @@ function buildBoard(){
 function determineAction(event){
   var row = parseFloat(event.target.id[0]);
   var cell = parseFloat(event.target.id[1]);
-  var id = row + '' + cell;
-  if(boardArray[row][cell].type === 'normal' && boardArray[row][cell].action === 'none' && boardArray[row][cell].piece === currentColorTurn && isFirstClickForTurn && isInbounds(id)){
-    currentSelectedPiece = id;
+  var id = event.target.id;
+  if(boardArray[row][cell].type === 'normal' && boardArray[row][cell].action === null && boardArray[row][cell].piece === currentColorTurn && isInbounds(id)){
+    selectPiece(id);
     boardArray[row][cell].action = 'clicked';
-    isFirstClickForTurn = false;
-    checkAvailableMoves(id, row);
+    checkMoves(id);
   }else if(boardArray[row][cell].type === 'king'){
   // check available KING moves
   }else if(boardArray[row][cell].action === 'clicked'){
-    boardArray[row][cell].action = 'none';
+    boardArray[row][cell].action = null;
     clearAvailableCells();
-    currentSelectedPiece = 'none';
-    isFirstClickForTurn = true;
+    currentSelectedPiece = null;
   }else if(boardArray[row][cell].action === 'available'){
     movePiece(id);
   }
 }
 
+function selectPiece(id){
+  clearAvailableCells();
+  currentSelectedPiece = currentSelectedPiece === id ? id : null;
+}
+
 function deconstructId(id){
   return {
-    row: id[0],
-    cell: id[1]
+    row: parseInt(id[0]),
+    cell: parseInt(id[1])
   };
 }
 
@@ -92,10 +94,23 @@ function constructId(row, cell){
 }
 
 function checkAdditionalJumps(id){
-  clearAvailableCells();
-  var targets = getJumps(id);
-  changeAvailCellsYellow();
+  availMoveCells = getJumpMoves(id);
+  return availMoveCells.length;
   //use these targets to determine where you can go
+}
+
+function markTarget(id){
+  markBoardStateTarget(id);
+  markBoardTarget(id);
+}
+
+function markBoardStateTarget(id){
+  boardArray[id[0]][id[1]].color = 'yellow';
+  boardArray[id[0]][id[1]].action = 'available';
+}
+
+function markBoardTarget(id){
+  document.getElementById(id).setAttribute('class', 'yellow-cell');
 }
 
 function changeAvailCellsYellow(){
@@ -108,22 +123,48 @@ function changeAvailCellsYellow(){
   }
 }
 
-function getJumps(id){
+function canMoveToCell(id, dir, magnitude, hDir){
+  var loc = deconstructId(id);
+  return magnitude === 1 ? canSingleMoveToCell(loc) : canJumpToCell(loc.row + dir * magnitude, loc.cell + hDir * magnitude, dir, hDir);
+}
+
+function canSingleMoveToCell(loc){
+  return cellIsEmpty(loc.row, loc.cell);
+}
+
+function getMoves(id, magnitude){
   var loc = deconstructId(id);
   var dir = currentColorTurn === 'black' ? -1 : 1;
-  var targets = [];
-  // check left jump
-  if(canJumpToCell(loc.row + dir * 2, loc.cell -2, dir, -1)){
+  var targetRow = loc.row + dir * magnitude;
+  var targetCell = loc.cell - magnitude;
+  var targetId = targetRow.toString() + targetCell.toString();
+  // check left
+  if(canMoveToCell(targetId, dir, magnitude, -1)){
     availMoveCells.push(
-      constructId(loc.row + dir * 2, loc.cell -2)
+      constructId(loc.row + dir * magnitude, loc.cell - magnitude)
     );
+    markTarget(targetId);
   }
-  // check right jump
-  if(canJumpToCell(loc.row + dir * 2, loc.cell +2, dir, 1)){
+  // check right
+  if(canMoveToCell(targetId, dir, magnitude, 1)){
     availMoveCells.push(
-      constructId(loc.row + dir * 2, loc.cell + 2)
+      constructId(loc.row + dir * magnitude, loc.cell + magnitude)
     );
+    markTarget(targetId);
   }
+}
+
+function checkMoves(id){
+  getSingleMoves(id);
+  getJumpMoves(id);
+}
+
+function getSingleMoves(id){
+  getMoves(id, 1);
+}
+
+function getJumpMoves(id){
+  getMoves(id, 2);
 }
 
 function canJumpToCell(row,cell,vDir,hDir){
@@ -138,8 +179,8 @@ function canJumpToCell(row,cell,vDir,hDir){
   return true;
 }
 
-function cellIsEmpty(row,cell){
-  return boardArray[row][cell].status === 'none';
+function cellIsEmpty(row, cell){
+  return !boardArray[row][cell].status;
 }
 
 function cellIsEnemy(row,cell){
@@ -187,8 +228,8 @@ function clearAvailableCells(){
   for(var i = 0; i < availMoveCells.length; i++){
   var id = availMoveCells[i];
   var cell = boardArray[id[0]][id[1]];
-    if(cell.status === 'none'){
-      cell.action = 'none';
+    if(cell.status === null){
+      cell.action = null;
       cell.color = 'white';
       resetColor(id);
     }
@@ -203,25 +244,26 @@ function movePiece(cell){
   var moveLocation = document.getElementById(id);
   var initialLocation = document.getElementById(currentSelectedPiece);
   var currentSelectedPieceColor = boardArray[currentSelectedPiece[0]][currentSelectedPiece[1]].piece;
-  if(currentCellArrayPosition.status === 'none' && currentCellArrayPosition.action === 'available'){
+  if(currentCellArrayPosition.status === null && currentCellArrayPosition.action === 'available'){
     clearAvailableCells();
     moveLocation.setAttribute('class', 'white-cell ' + currentSelectedPieceColor + '-piece');
     currentCellArrayPosition.status = 'piece';
     currentCellArrayPosition.type = 'normal';
     currentCellArrayPosition.piece = currentSelectedPieceColor;
     currentCellArrayPosition.color = 'white';
-    currentCellArrayPosition.action = 'none';
-    boardArray[currentSelectedPiece[0]][currentSelectedPiece[1]].status = 'none';
-    boardArray[currentSelectedPiece[0]][currentSelectedPiece[1]].piece = 'none';
+    currentCellArrayPosition.action = null;
+    boardArray[currentSelectedPiece[0]][currentSelectedPiece[1]].status = null;
+    boardArray[currentSelectedPiece[0]][currentSelectedPiece[1]].piece = null;
     initialLocation.setAttribute('class', 'white-cell');
-    // isFirstClickForTurn = true;
     // currentTurn++;
     firstMoveOnTurn = false;
     currentSelectedPiece = id;
-    if(currentCellArrayPosition.jumpLocation){
-      checkAdditionalJumps(id);
+    clearAvailableCells();
+    if(currentCellArrayPosition.isJump && checkAdditionalJumps(id)){
+      changeAvailCellsYellow();
+    }else{
+      setUpNextTurn();
     }
-    setUpNextTurn();
   }
 }
 
@@ -244,13 +286,12 @@ function singleMoveBlackCheckLeft(cell){
   if(cellInfo.inBounds){
     var id = cellInfo.id;
     var currentCellArrayPosition = cellInfo.cellObj;
-    if(currentCellArrayPosition.status === 'none'){
+    if(currentCellArrayPosition.status === null){
       document.getElementById(id).setAttribute('class', 'yellow-cell');
       currentCellArrayPosition.color = 'yellow';
       currentCellArrayPosition.action = 'available';
       // moveOnLeftPosition = id;
       availMoveCells.push(id);
-      isFirstClickForTurn = false;
     }else if(boardArray[id[0]][id[1]].status === 'piece' && boardArray[id[0]][id[1]].piece === 'red' && isInbounds(id) === true){
       jumpMoveBlackCheckLeft(cell, currentCellArrayPosition);
     }
@@ -261,14 +302,13 @@ function jumpMoveBlackCheckLeft(cell, currentCell){
   if (jumpCellInfo.inBounds) {
     var jumpId = jumpCellInfo.id;
     var currentJumpCellArrayPosition = jumpCellInfo.cellObj;
-    if(firstMoveOnTurn === true && currentCell.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
+    if(firstMoveOnTurn === true && currentCell.status === 'piece' && currentJumpCellArrayPosition.status === null){
       document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
       currentJumpCellArrayPosition.color = 'yellow';
       currentJumpCellArrayPosition.action = 'available';
-      currentJumpCellArrayPosition.jumpLocation = true; // if(obj.jumpLocation) {}
+      currentJumpCellArrayPosition.isJump = true; // if(obj.isJump) {}
       // moveOnLeftPosition = jumpId;
       availMoveCells.push(jumpId);
-      isFirstClickForTurn = false;
     }else if(firstMoveOnTurn === false){
       document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
       currentJumpCellArrayPosition.color = 'yellow';
@@ -284,13 +324,12 @@ function singleMoveBlackCheckRight(cell){
   if(cellInfo.inBounds){
     var id = cellInfo.id;
     var currentCellArrayPosition = cellInfo.cellObj;
-    if(currentCellArrayPosition.status === 'none'){
+    if(currentCellArrayPosition.status === null){
       document.getElementById(id).setAttribute('class', 'yellow-cell');
       currentCellArrayPosition.color = 'yellow';
       currentCellArrayPosition.action = 'available';
       // moveOnRightPosition = id;
       availMoveCells.push(id);
-      isFirstClickForTurn = false;
     }else if(boardArray[id[0]][id[1]].status === 'piece' && boardArray[id[0]][id[1]].piece === 'red' && isInbounds(id) === true){
       jumpMoveBlackCheckRight(cell, currentCellArrayPosition);
     }
@@ -301,14 +340,13 @@ function jumpMoveBlackCheckRight(cell, currentCell){
   if(jumpCellInfo.inBounds){
     var jumpId = jumpCellInfo.id;
     var currentJumpCellArrayPosition = jumpCellInfo.cellObj;
-    if(firstMoveOnTurn === true && currentCell.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
+    if(firstMoveOnTurn === true && currentCell.status === 'piece' && currentJumpCellArrayPosition.status === null){
       document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
       currentJumpCellArrayPosition.color = 'yellow';
       currentJumpCellArrayPosition.action = 'available';
-      currentJumpCellArrayPosition.jumpLocation = true;
+      currentJumpCellArrayPosition.isJump = true;
       // moveOnLeftPosition = jumpId;
       availMoveCells.push(jumpId);
-      isFirstClickForTurn = false;
     }else if(firstMoveOnTurn === false){
       document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
       currentJumpCellArrayPosition.color = 'yellow';
@@ -324,13 +362,12 @@ function singleMoveRedCheckLeft(cell){
   if(cellInfo.inBounds){
     var id = cellInfo.id;
     var currentCellArrayPosition = cellInfo.cellObj;
-    if(currentCellArrayPosition.status === 'none'){
+    if(currentCellArrayPosition.status === null){
       document.getElementById(id).setAttribute('class', 'yellow-cell');
       currentCellArrayPosition.color = 'yellow';
       currentCellArrayPosition.action = 'available';
       // moveOnLeftPosition = id;
       availMoveCells.push(id);
-      isFirstClickForTurn = false;
     }else if(boardArray[id[0]][id[1]].status === 'piece' && boardArray[id[0]][id[1]].piece === 'black' && isInbounds(id) === true){
       jumpMoveRedCheckLeft(cell, currentCellArrayPosition);
     }
@@ -341,14 +378,13 @@ function jumpMoveRedCheckLeft(cell, currentCell){
   if(jumpCellInfo.inBounds){
     var jumpId = jumpCellInfo.id;
     var currentJumpCellArrayPosition = jumpCellInfo.cellObj;
-    if(firstMoveOnTurn === true && currentCell.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
+    if(firstMoveOnTurn === true && currentCell.status === 'piece' && currentJumpCellArrayPosition.status === null){
       document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
       currentJumpCellArrayPosition.color = 'yellow';
       currentJumpCellArrayPosition.action = 'available';
-      currentJumpCellArrayPosition.jumpLocation = true;
+      currentJumpCellArrayPosition.isJump = true;
       // moveOnLeftPosition = jumpId;
       availMoveCells.push(jumpId);
-      isFirstClickForTurn = false;
     }else if(firstMoveOnTurn === false){
       document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
       currentJumpCellArrayPosition.color = 'yellow';
@@ -364,13 +400,12 @@ function singleMoveRedCheckRight(cell){
   if(cellInfo.inBounds){
     var id = cellInfo.id;
     var currentCellArrayPosition = cellInfo.cellObj;
-    if(currentCellArrayPosition.status === 'none'){
+    if(currentCellArrayPosition.status === null){
       document.getElementById(id).setAttribute('class', 'yellow-cell');
       currentCellArrayPosition.color = 'yellow';
       currentCellArrayPosition.action = 'available';
       // moveOnRightPosition = id;
       availMoveCells.push(id);
-      isFirstClickForTurn = false;
     }else if(boardArray[id[0]][id[1]].status === 'piece' && boardArray[id[0]][id[1]].piece === 'black' && isInbounds(id) === true){
       jumpMoveRedCheckRight(cell, currentCellArrayPosition);
     }
@@ -381,14 +416,13 @@ function jumpMoveRedCheckRight(cell, currentCell){
   if(jumpCellInfo.inBounds){
     var jumpId = jumpCellInfo.id;
     var currentJumpCellArrayPosition = jumpCellInfo.cellObj;
-    if(firstMoveOnTurn === true && currentCell.status === 'piece' && currentJumpCellArrayPosition.status === 'none'){
+    if(firstMoveOnTurn === true && currentCell.status === 'piece' && currentJumpCellArrayPosition.status === null){
       document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
       currentJumpCellArrayPosition.color = 'yellow';
       currentJumpCellArrayPosition.action = 'available';
-      currentJumpCellArrayPosition.jumpLocation = true;
+      currentJumpCellArrayPosition.isJump = true;
       // moveOnLeftPosition = jumpId;
       availMoveCells.push(jumpId);
-      isFirstClickForTurn = false;
     }else if(firstMoveOnTurn === false){
       document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
       currentJumpCellArrayPosition.color = 'yellow';
@@ -438,13 +472,13 @@ function changeYellowSquareToWhite(){
   var leftSquare = document.getElementById(moveOnLeftPosition);
   var rightSquare = document.getElementById(moveOnRightPosition);
   boardArray[moveOnLeftPosition[0]][moveOnLeftPosition[1]].color = 'white';
-  boardArray[moveOnLeftPosition[0]][moveOnLeftPosition[1]].action = 'none';
-  if(boardArray[moveOnLeftPosition[0]][moveOnLeftPosition[1]].status === 'none'){
+  boardArray[moveOnLeftPosition[0]][moveOnLeftPosition[1]].action = null;
+  if(boardArray[moveOnLeftPosition[0]][moveOnLeftPosition[1]].status === null){
     leftSquare.setAttribute('class', 'white-cell');
   }
   boardArray[moveOnRightPosition[0]][moveOnRightPosition[1]].color = 'white';
-  boardArray[moveOnRightPosition[0]][moveOnRightPosition[1]].action = 'none';
-  if(boardArray[moveOnRightPosition[0]][moveOnRightPosition[1]].status === 'none'){
+  boardArray[moveOnRightPosition[0]][moveOnRightPosition[1]].action = null;
+  if(boardArray[moveOnRightPosition[0]][moveOnRightPosition[1]].status === null){
     rightSquare.setAttribute('class', 'white-cell');
   }
 }
@@ -464,6 +498,5 @@ function isEven(number){
 }
 
 function setUpNextTurn(){
-  isFirstClickForTurn = true;
   currentTurn++;
 }
