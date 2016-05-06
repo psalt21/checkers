@@ -7,6 +7,7 @@ var moveOnRightPosition = null;
 var moveOnLeftPosition = null;
 var firstMoveOnTurn = true;
 var pieceJumped = false;
+var checkForJumps = false;
 
 (function setup(){
   buildBoard();
@@ -62,16 +63,14 @@ function determineAction(event){
   var row = parseFloat(event.target.id[0]);
   var cell = parseFloat(event.target.id[1]);
   var id = event.target.id;
-  if(boardArray[row][cell].type === 'normal' && boardArray[row][cell].action === null && boardArray[row][cell].piece === currentColorTurn && isInbounds(id)){
+
+  if(boardArray[row][cell].action === 'clicked'){
+    boardArray[row][cell].action = null;
+    selectPiece(null);
+  }else if(boardArray[row][cell].piece === currentColorTurn){
     selectPiece(id);
     boardArray[row][cell].action = 'clicked';
     checkMoves(id);
-  }else if(boardArray[row][cell].type === 'king'){
-  // check available KING moves
-  }else if(boardArray[row][cell].action === 'clicked'){
-    boardArray[row][cell].action = null;
-    clearAvailableCells();
-    currentSelectedPiece = null;
   }else if(boardArray[row][cell].action === 'available'){
     movePiece(id);
   }
@@ -82,15 +81,98 @@ function selectPiece(id){
   currentSelectedPiece = currentSelectedPiece === id ? id : null;
 }
 
-function deconstructId(id){
-  return {
-    row: parseInt(id[0]),
-    cell: parseInt(id[1])
-  };
+function checkMoves(id){
+  getSingleMoves(id);
+  getJumpMoves(id);
 }
 
-function constructId(row, cell){
-  return row + cell;
+function getSingleMoves(id){
+  getMoves(id, 1);
+}
+
+function getJumpMoves(id){
+  getMoves(id, 2);
+}
+
+function genTargetId(targetRow, currCell, magnitude, hDir){
+  targetCell = currCell + magnitude * hDir;
+  return constructId(targetRow, targetCell);
+}
+
+function getMoves(id, magnitude){
+  var loc = deconstructId(id);
+  var dir = currentColorTurn === 'black' ? -1 : 1;
+  var targetRow = loc.row + dir * magnitude;
+  var targetId = genTargetId(targetRow, loc.cell, magnitude, -1);
+  // check left
+  if(canMoveToCell(targetId, dir, magnitude, -1)){
+    availMoveCells.push(
+      constructId(loc.row + dir * magnitude, loc.cell - magnitude)
+    );
+    markTarget(targetId);
+  }
+  // check right
+  targetId = genTargetId(targetRow, loc.cell, magnitude, 1);
+  if(canMoveToCell(targetId, dir, magnitude, 1)){
+    availMoveCells.push(
+      constructId(loc.row + dir * magnitude, loc.cell + magnitude)
+    );
+    markTarget(targetId);
+  }
+}
+
+function clearAvailableCells(){
+  for(var i = 0; i < availMoveCells.length; i++){
+    var id = availMoveCells[i];
+    var cell = boardArray[id[0]][id[1]];
+    if(cell.status === null){
+      cell.action = null;
+      cell.color = 'white';
+      resetColor(id);
+    }
+  }
+  availMoveCells = [];
+}
+
+function getCellState(id){
+  var loc = deconstructId(id);
+  var row = loc.row;
+  var cell = loc.cell;
+  return boardArray[row][cell];
+}
+
+function isJumpMove(toId){
+  return Math.abs(parseInt(toId[0]) - parseInt(currentSelectedPiece[0])) === 2;
+}
+
+function movePiece(toId){
+  var newLoc = document.getElementById(toId);
+  var oldLoc = document.getElementById(currentSelectedPiece);
+  var currCell = getCellState(currentSelectedPiece);
+  var newCell = getCellState(toId);
+  if(newCell.status === null && newCell.action === 'available'){
+    clearAvailableCells();
+    newLoc.setAttribute('class', 'white-cell ' + currentColorTurn + '-piece');
+    newCell.status = 'piece';
+    newCell.type = 'normal';
+    newCell.piece = currentColorTurn;
+    newCell.color = 'white';
+    newCell.action = null;
+    currCell.status = null;
+    currCell.piece = null;
+    oldLoc.setAttribute('class', 'white-cell');
+    // currentTurn++;
+    firstMoveOnTurn = false;
+    currentSelectedPiece = toId;
+    if(isJumpMove(toId)){
+      checkForJumps = true;
+    }
+    if(checkForJumps && checkAdditionalJumps(toId)){
+      changeAvailCellsYellow();
+    }else{
+      setUpNextTurn();
+    }
+  }
 }
 
 function checkAdditionalJumps(id){
@@ -132,41 +214,6 @@ function canSingleMoveToCell(loc){
   return cellIsEmpty(loc.row, loc.cell);
 }
 
-function getMoves(id, magnitude){
-  var loc = deconstructId(id);
-  var dir = currentColorTurn === 'black' ? -1 : 1;
-  var targetRow = loc.row + dir * magnitude;
-  var targetCell = loc.cell - magnitude;
-  var targetId = targetRow.toString() + targetCell.toString();
-  // check left
-  if(canMoveToCell(targetId, dir, magnitude, -1)){
-    availMoveCells.push(
-      constructId(loc.row + dir * magnitude, loc.cell - magnitude)
-    );
-    markTarget(targetId);
-  }
-  // check right
-  if(canMoveToCell(targetId, dir, magnitude, 1)){
-    availMoveCells.push(
-      constructId(loc.row + dir * magnitude, loc.cell + magnitude)
-    );
-    markTarget(targetId);
-  }
-}
-
-function checkMoves(id){
-  getSingleMoves(id);
-  getJumpMoves(id);
-}
-
-function getSingleMoves(id){
-  getMoves(id, 1);
-}
-
-function getJumpMoves(id){
-  getMoves(id, 2);
-}
-
 function canJumpToCell(row,cell,vDir,hDir){
   //check if target is empty and on board
   if(!isOnBoard(row,cell) || !cellIsEmpty(row,cell)){
@@ -189,248 +236,6 @@ function cellIsEnemy(row,cell){
 
 function isOnBoard(row,cell){
   return row <= 7 && row >= 0 && cell <= 7 && row >= 0;
-}
-
-function getTargets(id){
-  var loc = deconstructId(id);
-  var dir = currentColorTurn === 'black' ? -1 : 1;
-  var targets = [];
-  //check left no jump
-  if(isOnBoard(loc.row + dir, loc.cell - 1)){
-    targets.push({
-      row: loc.row + dir,
-      cell: loc.cell - 1
-    });
-  }
-
-  //check left with jump
-  if(canJumpToCell(loc.row + (dir * 2), loc.cell - 2, dir, -1)){
-    targets.push({
-      row: loc.row + (dir * 2),
-      cell: loc.cell - 2
-    });
-  }
-}
-
-
-
-function checkAvailableMoves(id, row){
-  if(boardArray[id[0]][id[1]].status === 'piece' && boardArray[id[0]][id[1]].piece === 'black' && isInbounds(id) === true){
-    singleMoveBlackCheckLeft(id, row);
-    singleMoveBlackCheckRight(id, row);
-  }else if(boardArray[id[0]][id[1]].status === 'piece' && boardArray[id[0]][id[1]].piece === 'red' && isInbounds(id) === true){
-    singleMoveRedCheckLeft(id, row);
-    singleMoveRedCheckRight(id, row);
-  }
-}
-
-function clearAvailableCells(){
-  for(var i = 0; i < availMoveCells.length; i++){
-  var id = availMoveCells[i];
-  var cell = boardArray[id[0]][id[1]];
-    if(cell.status === null){
-      cell.action = null;
-      cell.color = 'white';
-      resetColor(id);
-    }
-  }
-  availMoveCells = [];
-}
-
-function movePiece(cell){
-  var cellInfo = getCellInfo(cell, null, null, 1);
-  var id = cellInfo.id;
-  var currentCellArrayPosition = cellInfo.cellObj;
-  var moveLocation = document.getElementById(id);
-  var initialLocation = document.getElementById(currentSelectedPiece);
-  var currentSelectedPieceColor = boardArray[currentSelectedPiece[0]][currentSelectedPiece[1]].piece;
-  if(currentCellArrayPosition.status === null && currentCellArrayPosition.action === 'available'){
-    clearAvailableCells();
-    moveLocation.setAttribute('class', 'white-cell ' + currentSelectedPieceColor + '-piece');
-    currentCellArrayPosition.status = 'piece';
-    currentCellArrayPosition.type = 'normal';
-    currentCellArrayPosition.piece = currentSelectedPieceColor;
-    currentCellArrayPosition.color = 'white';
-    currentCellArrayPosition.action = null;
-    boardArray[currentSelectedPiece[0]][currentSelectedPiece[1]].status = null;
-    boardArray[currentSelectedPiece[0]][currentSelectedPiece[1]].piece = null;
-    initialLocation.setAttribute('class', 'white-cell');
-    // currentTurn++;
-    firstMoveOnTurn = false;
-    currentSelectedPiece = id;
-    clearAvailableCells();
-    if(currentCellArrayPosition.isJump && checkAdditionalJumps(id)){
-      changeAvailCellsYellow();
-    }else{
-      setUpNextTurn();
-    }
-  }
-}
-
-// function checkAdditionalJumpMoves(curCell){
-//   var id = curCell;
-//   color = boardArray[id[0]][id[1]].piece
-//   if(color === 'black'){
-//     if()
-//       jumpMoveBlackCheckLeft(id, null);
-//     }
-//     jumpMoveBlackCheckRight(id, null);
-//   }else if(boardArray[id[0]][id[1]].piece === 'red'){
-//     jumpMoveRedCheckLeft(id, null);
-//     jumpMoveRedCheckRight(id, null);
-//   }
-// }
-
-function singleMoveBlackCheckLeft(cell){
-  var cellInfo = getCellInfo(cell, '-', '-', 1);
-  if(cellInfo.inBounds){
-    var id = cellInfo.id;
-    var currentCellArrayPosition = cellInfo.cellObj;
-    if(currentCellArrayPosition.status === null){
-      document.getElementById(id).setAttribute('class', 'yellow-cell');
-      currentCellArrayPosition.color = 'yellow';
-      currentCellArrayPosition.action = 'available';
-      // moveOnLeftPosition = id;
-      availMoveCells.push(id);
-    }else if(boardArray[id[0]][id[1]].status === 'piece' && boardArray[id[0]][id[1]].piece === 'red' && isInbounds(id) === true){
-      jumpMoveBlackCheckLeft(cell, currentCellArrayPosition);
-    }
-  }
-}
-function jumpMoveBlackCheckLeft(cell, currentCell){
-  var jumpCellInfo = getCellInfo(cell, '-', '-', 2);
-  if (jumpCellInfo.inBounds) {
-    var jumpId = jumpCellInfo.id;
-    var currentJumpCellArrayPosition = jumpCellInfo.cellObj;
-    if(firstMoveOnTurn === true && currentCell.status === 'piece' && currentJumpCellArrayPosition.status === null){
-      document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
-      currentJumpCellArrayPosition.color = 'yellow';
-      currentJumpCellArrayPosition.action = 'available';
-      currentJumpCellArrayPosition.isJump = true; // if(obj.isJump) {}
-      // moveOnLeftPosition = jumpId;
-      availMoveCells.push(jumpId);
-    }else if(firstMoveOnTurn === false){
-      document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
-      currentJumpCellArrayPosition.color = 'yellow';
-      currentJumpCellArrayPosition.action = 'available';
-      // moveOnLeftPosition = jumpId;
-      availMoveCells.push(jumpId);
-    }
-  }
-}
-
-function singleMoveBlackCheckRight(cell){
-  var cellInfo = getCellInfo(cell, '-', '+', 1);
-  if(cellInfo.inBounds){
-    var id = cellInfo.id;
-    var currentCellArrayPosition = cellInfo.cellObj;
-    if(currentCellArrayPosition.status === null){
-      document.getElementById(id).setAttribute('class', 'yellow-cell');
-      currentCellArrayPosition.color = 'yellow';
-      currentCellArrayPosition.action = 'available';
-      // moveOnRightPosition = id;
-      availMoveCells.push(id);
-    }else if(boardArray[id[0]][id[1]].status === 'piece' && boardArray[id[0]][id[1]].piece === 'red' && isInbounds(id) === true){
-      jumpMoveBlackCheckRight(cell, currentCellArrayPosition);
-    }
-  }
-}
-function jumpMoveBlackCheckRight(cell, currentCell){
-  var jumpCellInfo = getCellInfo(cell, '-', '+', 2);
-  if(jumpCellInfo.inBounds){
-    var jumpId = jumpCellInfo.id;
-    var currentJumpCellArrayPosition = jumpCellInfo.cellObj;
-    if(firstMoveOnTurn === true && currentCell.status === 'piece' && currentJumpCellArrayPosition.status === null){
-      document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
-      currentJumpCellArrayPosition.color = 'yellow';
-      currentJumpCellArrayPosition.action = 'available';
-      currentJumpCellArrayPosition.isJump = true;
-      // moveOnLeftPosition = jumpId;
-      availMoveCells.push(jumpId);
-    }else if(firstMoveOnTurn === false){
-      document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
-      currentJumpCellArrayPosition.color = 'yellow';
-      currentJumpCellArrayPosition.action = 'available';
-      // moveOnLeftPosition = jumpId;
-      availMoveCells.push(jumpId);
-    }
-  }
-}
-
-function singleMoveRedCheckLeft(cell){
-  var cellInfo = getCellInfo(cell, '+', '-', 1);
-  if(cellInfo.inBounds){
-    var id = cellInfo.id;
-    var currentCellArrayPosition = cellInfo.cellObj;
-    if(currentCellArrayPosition.status === null){
-      document.getElementById(id).setAttribute('class', 'yellow-cell');
-      currentCellArrayPosition.color = 'yellow';
-      currentCellArrayPosition.action = 'available';
-      // moveOnLeftPosition = id;
-      availMoveCells.push(id);
-    }else if(boardArray[id[0]][id[1]].status === 'piece' && boardArray[id[0]][id[1]].piece === 'black' && isInbounds(id) === true){
-      jumpMoveRedCheckLeft(cell, currentCellArrayPosition);
-    }
-  }
-}
-function jumpMoveRedCheckLeft(cell, currentCell){
-  var jumpCellInfo = getCellInfo(cell, '+', '-', 2);
-  if(jumpCellInfo.inBounds){
-    var jumpId = jumpCellInfo.id;
-    var currentJumpCellArrayPosition = jumpCellInfo.cellObj;
-    if(firstMoveOnTurn === true && currentCell.status === 'piece' && currentJumpCellArrayPosition.status === null){
-      document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
-      currentJumpCellArrayPosition.color = 'yellow';
-      currentJumpCellArrayPosition.action = 'available';
-      currentJumpCellArrayPosition.isJump = true;
-      // moveOnLeftPosition = jumpId;
-      availMoveCells.push(jumpId);
-    }else if(firstMoveOnTurn === false){
-      document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
-      currentJumpCellArrayPosition.color = 'yellow';
-      currentJumpCellArrayPosition.action = 'available';
-      // moveOnLeftPosition = jumpId;
-      availMoveCells.push(jumpId);
-    }
-  }
-}
-
-function singleMoveRedCheckRight(cell){
-  var cellInfo = getCellInfo(cell, '+', '+', 1);
-  if(cellInfo.inBounds){
-    var id = cellInfo.id;
-    var currentCellArrayPosition = cellInfo.cellObj;
-    if(currentCellArrayPosition.status === null){
-      document.getElementById(id).setAttribute('class', 'yellow-cell');
-      currentCellArrayPosition.color = 'yellow';
-      currentCellArrayPosition.action = 'available';
-      // moveOnRightPosition = id;
-      availMoveCells.push(id);
-    }else if(boardArray[id[0]][id[1]].status === 'piece' && boardArray[id[0]][id[1]].piece === 'black' && isInbounds(id) === true){
-      jumpMoveRedCheckRight(cell, currentCellArrayPosition);
-    }
-  }
-}
-function jumpMoveRedCheckRight(cell, currentCell){
-  var jumpCellInfo = getCellInfo(cell, '+', '+', 2);
-  if(jumpCellInfo.inBounds){
-    var jumpId = jumpCellInfo.id;
-    var currentJumpCellArrayPosition = jumpCellInfo.cellObj;
-    if(firstMoveOnTurn === true && currentCell.status === 'piece' && currentJumpCellArrayPosition.status === null){
-      document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
-      currentJumpCellArrayPosition.color = 'yellow';
-      currentJumpCellArrayPosition.action = 'available';
-      currentJumpCellArrayPosition.isJump = true;
-      // moveOnLeftPosition = jumpId;
-      availMoveCells.push(jumpId);
-    }else if(firstMoveOnTurn === false){
-      document.getElementById(jumpId).setAttribute('class', 'yellow-cell');
-      currentJumpCellArrayPosition.color = 'yellow';
-      currentJumpCellArrayPosition.action = 'available';
-      // moveOnLeftPosition = jumpId;
-      availMoveCells.push(jumpId);
-    }
-  }
 }
 
 function isInbounds(cell){
@@ -499,4 +304,16 @@ function isEven(number){
 
 function setUpNextTurn(){
   currentTurn++;
+  checkForJumps = false;
+}
+
+function deconstructId(id){
+  return {
+    row: parseInt(id[0]),
+    cell: parseInt(id[1])
+  };
+}
+
+function constructId(row, cell){
+  return row.toString() + cell.toString();
 }
