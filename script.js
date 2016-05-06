@@ -68,6 +68,7 @@ function determineAction(event){
     boardArray[row][cell].action = null;
     selectPiece(null);
   }else if(boardArray[row][cell].piece === currentColorTurn){
+    currentSelectedPiece = id;
     selectPiece(id);
     boardArray[row][cell].action = 'clicked';
     checkMoves(id);
@@ -161,7 +162,6 @@ function movePiece(toId){
     currCell.status = null;
     currCell.piece = null;
     oldLoc.setAttribute('class', 'white-cell');
-    // currentTurn++;
     firstMoveOnTurn = false;
     currentSelectedPiece = toId;
     if(isJumpMove(toId)){
@@ -207,20 +207,23 @@ function changeAvailCellsYellow(){
 
 function canMoveToCell(id, dir, magnitude, hDir){
   var loc = deconstructId(id);
-  return magnitude === 1 ? canSingleMoveToCell(loc) : canJumpToCell(loc.row + dir * magnitude, loc.cell + hDir * magnitude, dir, hDir);
+  return magnitude === 1 ? canSingleMoveToCell(loc) : canJumpToCell(loc.row, loc.cell, dir, hDir);
 }
 
 function canSingleMoveToCell(loc){
-  return cellIsEmpty(loc.row, loc.cell);
+  if(isOnBoard(loc.row, loc.cell)){
+    return cellIsEmpty(loc.row, loc.cell);
+  }
 }
 
-function canJumpToCell(row,cell,vDir,hDir){
+function canJumpToCell(row, cell, vDir, hDir){
   //check if target is empty and on board
-  if(!isOnBoard(row,cell) || !cellIsEmpty(row,cell)){
+  if(!isOnBoard(row, cell)){
     return false;
-  }
+  }else if(!cellIsEmpty(row, cell)){
+    return false;
   //check if intermediate cell is occupied by the enemy
-  else if(!cellIsEnemy(row - vDir,cell - hDir)){
+  }else if(!isOnBoard(row, cell) && !cellIsEnemy(row - vDir,cell - hDir)){
     return false;
   }
   return true;
@@ -235,7 +238,7 @@ function cellIsEnemy(row,cell){
 }
 
 function isOnBoard(row,cell){
-  return row <= 7 && row >= 0 && cell <= 7 && row >= 0;
+  return row <= 7 && row >= 0 && cell <= 7 && cell >= 0;
 }
 
 function isInbounds(cell){
