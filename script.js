@@ -1,6 +1,7 @@
 var boardArray = [];
 var availMoveCells = [];
 var currentSelectedPiece = null;
+var originalLocation = null;
 var currentTurn = 0;
 var currentColorTurn = 'black';
 var moveOnRightPosition = null;
@@ -122,6 +123,21 @@ function getMoves(id, magnitude){
   }
 }
 
+function determineEnemyLocationToClear(){
+  var row = (parseInt(currentSelectedPiece[0]) - parseInt(originalLocation[0])) / 2;
+  var cell = (parseInt(currentSelectedPiece[1]) - parseInt(originalLocation[1])) / 2;
+  var newRow = parseInt(originalLocation[0]) + parseInt(row);
+  var newCell = parseInt(originalLocation[1]) + parseInt(cell);
+  return constructId(newRow, newCell);
+}
+
+function clearEnemy(id){
+  var cell = boardArray[id[0]][id[1]];
+  cell.action = null;
+  cell.color = 'white';
+  resetColor(id);
+}
+
 function clearAvailableCells(){
   for(var i = 0; i < availMoveCells.length; i++){
     var id = availMoveCells[i];
@@ -163,9 +179,13 @@ function movePiece(toId){
     currCell.piece = null;
     oldLoc.setAttribute('class', 'white-cell');
     firstMoveOnTurn = false;
-    currentSelectedPiece = toId;
+    // currentSelectedPiece = toId;
     if(isJumpMove(toId)){
+      originalLocation = currentSelectedPiece;
+      currentSelectedPiece = toId;
       checkForJumps = true;
+      var jumpedCell = determineEnemyLocationToClear();
+      clearEnemy(jumpedCell);
     }
     if(checkForJumps && checkAdditionalJumps(toId)){
       changeAvailCellsYellow();
@@ -176,7 +196,7 @@ function movePiece(toId){
 }
 
 function checkAdditionalJumps(id){
-  availMoveCells = getJumpMoves(id);
+  getJumpMoves(id);
   return availMoveCells.length;
   //use these targets to determine where you can go
 }
@@ -223,7 +243,7 @@ function canJumpToCell(row, cell, vDir, hDir){
   }else if(!cellIsEmpty(row, cell)){
     return false;
   //check if intermediate cell is occupied by the enemy
-  }else if(!isOnBoard(row, cell) && !cellIsEnemy(row - vDir,cell - hDir)){
+  }else if(!cellIsEnemy(row - vDir,cell - hDir)){
     return false;
   }
   return true;
