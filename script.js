@@ -9,6 +9,7 @@ var moveOnLeftPosition = null;
 var firstMoveOnTurn = true;
 var pieceJumped = false;
 var checkForJumps = false;
+var isKing = false;
 
 (function setup(){
   buildBoard();
@@ -41,12 +42,12 @@ function buildBoard(){
           cell.setAttribute('class', 'white-cell red-piece');
           cellObject.piece = 'red';
           cellObject.status = 'piece';
-          cellObject.type = 'normal';
+          // cellObject.type = 'normal';
         }else if(rowId > 4){
           cell.setAttribute('class', 'white-cell black-piece');
           cellObject.piece = 'black';
           cellObject.status = 'piece';
-          cellObject.type = 'normal';
+          // cellObject.type = 'normal';
         }else{
           cell.setAttribute('class', 'white-cell');
           cellObject.piece = null;
@@ -66,9 +67,20 @@ function determineAction(event){
   var id = event.target.id;
 
   if(boardArray[row][cell].action === 'clicked'){
+    isKing = false;
     boardArray[row][cell].action = null;
     selectPiece(null);
+  }else if(boardArray[row][cell].type === 'king' && boardArray[row][cell].piece === currentColorTurn){
+    currentSelectedPiece = id;
+    isKing = true;
+    selectPiece(id);
+    checkMoves(id);
+    currentTurn++;
+    determineCurrentColorTurn();
+    checkMoves(id);
+    currentTurn++;
   }else if(boardArray[row][cell].piece === currentColorTurn){
+    isKing = false;
     currentSelectedPiece = id;
     selectPiece(id);
     boardArray[row][cell].action = 'clicked';
@@ -87,6 +99,10 @@ function checkMoves(id){
   getSingleMoves(id);
   getJumpMoves(id);
 }
+
+// function checkKingMoves(id){
+//
+// }
 
 function getSingleMoves(id){
   getMoves(id, 1);
@@ -134,7 +150,8 @@ function determineEnemyLocationToClear(){
 function clearEnemy(id){
   var cell = boardArray[id[0]][id[1]];
   cell.action = null;
-  cell.color = 'white';
+  cell.piece = null;
+  cell.status = null;
   resetColor(id);
 }
 
@@ -170,16 +187,22 @@ function movePiece(toId){
   if(newCell.status === null && newCell.action === 'available'){
     clearAvailableCells();
     newLoc.setAttribute('class', 'white-cell ' + currentColorTurn + '-piece');
+    if(isKing === true){
+      newCell.type = 'king';
+    }
     newCell.status = 'piece';
-    newCell.type = 'normal';
     newCell.piece = currentColorTurn;
     newCell.color = 'white';
     newCell.action = null;
     currCell.status = null;
     currCell.piece = null;
+    currCell.action = null;
     oldLoc.setAttribute('class', 'white-cell');
     firstMoveOnTurn = false;
     // currentSelectedPiece = toId;
+    if(pieceIsOnOppEdge(toId)){
+      changeToKing(toId);
+    }
     if(isJumpMove(toId)){
       originalLocation = currentSelectedPiece;
       currentSelectedPiece = toId;
@@ -193,6 +216,21 @@ function movePiece(toId){
       setUpNextTurn();
     }
   }
+}
+
+function pieceIsOnOppEdge(id){
+  if(currentColorTurn === 'black' && id[0] === '0'){
+    return true;
+  }else if(currentColorTurn === 'red' && id[0] === '7'){
+    return true;
+  }else{
+    return false;
+  }
+}
+
+function changeToKing(id){
+  var cell = boardArray[id[0]][id[1]];
+  cell.type = 'king';
 }
 
 function checkAdditionalJumps(id){

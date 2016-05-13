@@ -44,3 +44,15 @@ h1{
   background-position: center;
   background-image:url(images/red.png);
 }
+.black-king-piece{
+  background-size: 78px 78px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-image:url(images/king-black.gif);
+}
+.red-king-piece{
+  background-size: 78px 78px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-image:url(images/king-red.gif);
+}
