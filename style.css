@@ -2,19 +2,23 @@ h1{
   text-align: center;
   font-size: 3em;
   font-family: sans-serif;
+  margin-bottom: -10px;
+  margin-top: -5px;
 }
 #checker-board{
-  border: 2px black solid;
+  border: 2.5px #2F2F2F solid;
   width: 720px;
   height: 720px;
   margin-left: auto;
   margin-right: auto;
+  border-radius: 5px;
 }
 .white-cell{
   width: 90px;
   height: 90px;
-  background-color: white;
+  background-color: #FFFFF2;
   float: left;
+  border-radius: 2px;
 }
 .checker-piece{
   width: 85px;
@@ -24,35 +28,39 @@ h1{
 .black-cell{
   width: 90px;
   height: 90px;
-  background-color: black;
+  background-color: #2F2F2F;
   float: left;
+  border-radius: 2px;
 }
 .yellow-cell{
   width: 90px;
   height: 90px;
-  background-color: #FFFA56;
+  background-color: #FDFF94;
   float: left;
 }
 .black-piece{
-  content:url(images/black.png);
+  background-size: 78px 78px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-image:url(images/black2.png);
 }
 .red-piece{
   background-size: 78px 78px;
   background-repeat: no-repeat;
   background-position: center;
-  background-image:url(images/red.png);
+  background-image:url(images/red2.png);
 }
 .black-king-piece{
   background-size: 78px 78px;
   background-repeat: no-repeat;
   background-position: center;
-  background-image:url(images/king-black.gif);
+  background-image:url(images/king-black2.png);
 }
 .red-king-piece{
   background-size: 78px 78px;
   background-repeat: no-repeat;
   background-position: center;
-  background-image:url(images/king-red.gif);
+  background-image:url(images/king-red2.png);
 }
 .pull-left{
   float: left;
