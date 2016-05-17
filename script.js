@@ -9,7 +9,7 @@ var moveOnLeftPosition = null;
 var firstMoveOnTurn = true;
 var pieceJumped = false;
 var checkForJumps = false;
-var isKing = false;
+var canSwitch = true;
 
 (function setup(){
   buildBoard();
@@ -33,21 +33,23 @@ function buildBoard(){
         cell.setAttribute('class', 'black-cell');
         cellObject.color = 'black';
         cellObject.action = null;
+        cellObject.type = null;
       }else{
         cell.setAttribute('class', 'white-cell');
         cellObject.color = 'white';
         cellObject.action = null;
+        cellObject.type = null;
         cell.addEventListener('click', cellClicked);
         if(rowId < 3){
           cell.setAttribute('class', 'white-cell red-piece');
           cellObject.piece = 'red';
           cellObject.status = 'piece';
-          // cellObject.type = 'normal';
+          cellObject.type = 'normal';
         }else if(rowId > 4){
           cell.setAttribute('class', 'white-cell black-piece');
           cellObject.piece = 'black';
           cellObject.status = 'piece';
-          // cellObject.type = 'normal';
+          cellObject.type = 'normal';
         }else{
           cell.setAttribute('class', 'white-cell');
           cellObject.piece = null;
@@ -66,21 +68,10 @@ function determineAction(event){
   var cell = parseFloat(event.target.id[1]);
   var id = event.target.id;
 
-  if(boardArray[row][cell].action === 'clicked'){
-    isKing = false;
+  if(boardArray[row][cell].action === 'clicked' && canSwitch){
     boardArray[row][cell].action = null;
     selectPiece(null);
-  }else if(boardArray[row][cell].type === 'king' && boardArray[row][cell].piece === currentColorTurn){
-    currentSelectedPiece = id;
-    isKing = true;
-    selectPiece(id);
-    checkMoves(id);
-    currentTurn++;
-    determineCurrentColorTurn();
-    checkMoves(id);
-    currentTurn++;
-  }else if(boardArray[row][cell].piece === currentColorTurn){
-    isKing = false;
+  }else if(boardArray[row][cell].piece === currentColorTurn && canSwitch){
     currentSelectedPiece = id;
     selectPiece(id);
     boardArray[row][cell].action = 'clicked';
@@ -91,25 +82,34 @@ function determineAction(event){
 }
 
 function selectPiece(id){
-  clearAvailableCells();
-  currentSelectedPiece = currentSelectedPiece === id ? id : null;
+    clearAvailableCells();
+    currentSelectedPiece = currentSelectedPiece === id ? id : null;
 }
 
 function checkMoves(id){
   getSingleMoves(id);
   getJumpMoves(id);
+  if(currentPieceIsKing()){
+    getSingleMoves(id, true);
+    getJumpMoves(id, true);
+  }
 }
 
 // function checkKingMoves(id){
 //
 // }
 
-function getSingleMoves(id){
-  getMoves(id, 1);
+function currentPieceIsKing(){
+  var loc = deconstructId(currentSelectedPiece);
+  return boardArray[loc.row][loc.cell].type === 'king';
 }
 
-function getJumpMoves(id){
-  getMoves(id, 2);
+function getSingleMoves(id, isKing){
+  getMoves(id, 1, isKing);
+}
+
+function getJumpMoves(id, isKing){
+  getMoves(id, 2, isKing);
 }
 
 function genTargetId(targetRow, currCell, magnitude, hDir){
@@ -117,9 +117,14 @@ function genTargetId(targetRow, currCell, magnitude, hDir){
   return constructId(targetRow, targetCell);
 }
 
-function getMoves(id, magnitude){
+function getMoves(id, magnitude, isKing){
   var loc = deconstructId(id);
-  var dir = currentColorTurn === 'black' ? -1 : 1;
+  // var dir = currentColorTurn === 'black' ? -1 : 1;
+  if((currentColorTurn === 'black' && !isKing) || (currentColorTurn === 'red' && isKing)){
+    var dir = -1;
+  }else{
+    var dir = 1;
+  }
   var targetRow = loc.row + dir * magnitude;
   var targetId = genTargetId(targetRow, loc.cell, magnitude, -1);
   // check left
@@ -186,17 +191,22 @@ function movePiece(toId){
   var newCell = getCellState(toId);
   if(newCell.status === null && newCell.action === 'available'){
     clearAvailableCells();
-    newLoc.setAttribute('class', 'white-cell ' + currentColorTurn + '-piece');
-    if(isKing === true){
-      newCell.type = 'king';
+    newLoc.className = oldLoc.className;
+    // newLoc.setAttribute('class', 'white-cell ' + currentColorTurn + '-piece');
+    for (var key in currCell) {
+      if (currCell.hasOwnProperty(key)) {
+        newCell[key] = currCell[key];
+      }
     }
-    newCell.status = 'piece';
-    newCell.piece = currentColorTurn;
-    newCell.color = 'white';
-    newCell.action = null;
+    // newCell.type = currCell.type;
+    // newCell.status = 'piece';
+    // newCell.piece = currentColorTurn;
+    // newCell.color = 'white';
+    // newCell.action = null;
     currCell.status = null;
     currCell.piece = null;
     currCell.action = null;
+    currCell.type = null;
     oldLoc.setAttribute('class', 'white-cell');
     firstMoveOnTurn = false;
     // currentSelectedPiece = toId;
@@ -204,6 +214,7 @@ function movePiece(toId){
       changeToKing(toId);
     }
     if(isJumpMove(toId)){
+      canSwitch = false;
       originalLocation = currentSelectedPiece;
       currentSelectedPiece = toId;
       checkForJumps = true;
@@ -231,10 +242,14 @@ function pieceIsOnOppEdge(id){
 function changeToKing(id){
   var cell = boardArray[id[0]][id[1]];
   cell.type = 'king';
+  document.getElementById(id).setAttribute('class', 'white-cell ' + currentColorTurn + '-king-piece');
 }
 
 function checkAdditionalJumps(id){
   getJumpMoves(id);
+  if(currentPieceIsKing()){
+    getJumpMoves(id, true);
+  }
   return availMoveCells.length;
   //use these targets to determine where you can go
 }
@@ -366,6 +381,7 @@ function isEven(number){
 function setUpNextTurn(){
   currentTurn++;
   checkForJumps = false;
+  canSwitch = true;
 }
 
 function deconstructId(id){

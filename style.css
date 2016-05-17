@@ -7,16 +7,14 @@ h1{
   border: 2px black solid;
   width: 720px;
   height: 720px;
+  margin-left: auto;
+  margin-right: auto;
 }
 .white-cell{
   width: 90px;
   height: 90px;
   background-color: white;
   float: left;
-}
-.row{
-
-
 }
 .checker-piece{
   width: 85px;
@@ -55,4 +53,15 @@ h1{
   background-repeat: no-repeat;
   background-position: center;
   background-image:url(images/king-red.gif);
+}
+.pull-left{
+  float: left;
+}
+.pull-right{
+  float: right;
+}
+.main-content{
+  margin-left: auto;
+  margin-right: auto;
+  min-width: 720px!important;
 }
