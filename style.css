@@ -28,7 +28,7 @@ h1{
 .black-cell{
   width: 90px;
   height: 90px;
-  background-color: #2F2F2F;
+  background-color: #232323;
   float: left;
   border-radius: 2px;
 }
@@ -42,25 +42,25 @@ h1{
   background-size: 78px 78px;
   background-repeat: no-repeat;
   background-position: center;
-  background-image:url(images/black2.png);
+  background-image:url(http://s19.postimg.org/m8dje08j7/black2.png);
 }
 .red-piece{
   background-size: 78px 78px;
   background-repeat: no-repeat;
   background-position: center;
-  background-image:url(images/red2.png);
+  background-image:url(http://s19.postimg.org/7gdf0erzn/red2.png);
 }
 .black-king-piece{
   background-size: 78px 78px;
   background-repeat: no-repeat;
   background-position: center;
-  background-image:url(images/king-black2.png);
+  background-image:url(http://s19.postimg.org/t03yguxir/king_black2.png);
 }
 .red-king-piece{
   background-size: 78px 78px;
   background-repeat: no-repeat;
   background-position: center;
-  background-image:url(images/king-red2.png);
+  background-image:url(http://s19.postimg.org/4kvqfsylv/king_red2.png);
 }
 .pull-left{
   float: left;
