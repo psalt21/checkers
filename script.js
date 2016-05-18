@@ -10,6 +10,10 @@ var firstMoveOnTurn = true;
 var pieceJumped = false;
 var checkForJumps = false;
 var canSwitch = true;
+var piecesCapturedBy = {
+  red: 0,
+  black: 0,
+};
 
 (function setup(){
   buildBoard();
@@ -64,6 +68,7 @@ function buildBoard(){
 }
 
 function determineAction(event){
+  console.log("clicks happen");
   var row = parseFloat(event.target.id[0]);
   var cell = parseFloat(event.target.id[1]);
   var id = event.target.id;
@@ -94,10 +99,6 @@ function checkMoves(id){
     getJumpMoves(id, true);
   }
 }
-
-// function checkKingMoves(id){
-//
-// }
 
 function currentPieceIsKing(){
   var loc = deconstructId(currentSelectedPiece);
@@ -196,13 +197,9 @@ function movePiece(toId){
     for (var key in currCell) {
       if (currCell.hasOwnProperty(key)) {
         newCell[key] = currCell[key];
+        newCell.action = null;
       }
     }
-    // newCell.type = currCell.type;
-    // newCell.status = 'piece';
-    // newCell.piece = currentColorTurn;
-    // newCell.color = 'white';
-    // newCell.action = null;
     currCell.status = null;
     currCell.piece = null;
     currCell.action = null;
@@ -214,6 +211,7 @@ function movePiece(toId){
       changeToKing(toId);
     }
     if(isJumpMove(toId)){
+      piecesCapturedBy[currentColorTurn]++;
       canSwitch = false;
       originalLocation = currentSelectedPiece;
       currentSelectedPiece = toId;
@@ -379,9 +377,13 @@ function isEven(number){
 }
 
 function setUpNextTurn(){
-  currentTurn++;
-  checkForJumps = false;
-  canSwitch = true;
+  if(piecesCapturedBy[currentColorTurn] === 12){
+    alert(currentColorTurn + " is the winner!");
+  }else{
+    currentTurn++;
+    checkForJumps = false;
+    canSwitch = true;
+  }
 }
 
 function deconstructId(id){
