@@ -396,3 +396,7 @@ function deconstructId(id){
 function constructId(row, cell){
   return row.toString() + cell.toString();
 }
+
+function resetGame(){
+  location.reload();
+}
